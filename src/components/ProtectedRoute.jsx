@@ -1,14 +1,21 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem("adminToken");
+  const location = useLocation();
 
-  // If no token, redirect to admin login
+  // If user is NOT logged in → redirect to login
   if (!token) {
-    return <Navigate to="/admin-login" replace />;
+    return (
+      <Navigate
+        to="/admin-login"
+        replace
+        state={{ from: location }}
+      />
+    );
   }
 
-  // If token exists, show the protected content
+  // If logged in → allow access
   return children;
 }
 
