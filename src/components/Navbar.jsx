@@ -23,7 +23,7 @@ function Navbar() {
     }
   });
 
-  // Fetch navbar data from backend
+  // Fetch navbar data from backend - NOW HANDLES 401 GRACEFULLY
   useEffect(() => {
     fetchNavbarData();
   }, []);
@@ -44,7 +44,9 @@ function Navbar() {
         });
       }
     } catch (error) {
-      console.error("Error fetching navbar data:", error);
+      // Just log the error but DON'T redirect - keep using default data
+      console.log("Using default navbar data (settings not available)");
+      // Keep the default data - no redirect!
     }
   };
 
