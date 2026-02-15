@@ -1,0 +1,8 @@
+echo [build]
+echo   command = "npm run build"
+echo   publish = "dist"
+echo.
+echo [[redirects]]
+echo   from = "/*"
+echo   to = "/index.html"
+echo   status = 200 > netlify.toml
