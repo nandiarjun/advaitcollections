@@ -8,6 +8,8 @@ const API_URL =
   import.meta.env.VITE_API_URL ||
   "https://advaitcollections-backend.onrender.com/api";
 
+console.log("🚀 API Base URL:", API_URL); // Add this line
+
 const api = axios.create({
   baseURL: API_URL,
   headers: {
@@ -17,7 +19,7 @@ const api = axios.create({
 });
 
 /* =========================================
-   REQUEST INTERCEPTOR
+   REQUEST INTERCEPTOR - ADD DEBUGGING
 ========================================= */
 
 api.interceptors.request.use(
@@ -27,6 +29,9 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // ✅ THIS WILL SHOW YOU THE EXACT URL BEING CALLED
+    console.log(`🌐 Calling: ${config.baseURL}${config.url}`);
 
     return config;
   },
@@ -128,6 +133,7 @@ export const salesAPI = {
 
 export const authAPI = {
   adminLogin: async (credentials) => {
+    // ✅ THIS IS CORRECT - just "/auth/admin-login", not "/api/auth/admin-login"
     const res = await api.post("/auth/admin-login", credentials);
 
     if (res.data.token) {
