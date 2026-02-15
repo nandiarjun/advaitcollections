@@ -23,32 +23,39 @@ function Navbar() {
     }
   });
 
-  // Fetch navbar data from backend - NOW HANDLES 401 GRACEFULLY
+  // Fetch navbar data from backend - SAFELY HANDLE ERRORS
   useEffect(() => {
+    const fetchNavbarData = async () => {
+      try {
+        const token = localStorage.getItem("adminToken");
+        
+        // Only try to fetch settings if token exists (user is logged in)
+        if (token) {
+          const response = await settingsAPI.getSettings();
+          if (response.success) {
+            const settings = response.settings;
+            setNavbarData({
+              businessName: settings.businessName || "Advait Collections",
+              logo: settings.logo || { url: "", publicId: "" },
+              phoneNumbers: settings.phoneNumbers?.length > 0 ? settings.phoneNumbers : navbarData.phoneNumbers,
+              socialMedia: {
+                ...navbarData.socialMedia,
+                ...settings.socialMedia
+              }
+            });
+          }
+        } else {
+          // No token - use default data silently (no error)
+          console.log("Using default navbar data (not logged in)");
+        }
+      } catch (error) {
+        // Silently fail - just use default data
+        console.log("Using default navbar data (settings unavailable)");
+      }
+    };
+
     fetchNavbarData();
   }, []);
-
-  const fetchNavbarData = async () => {
-    try {
-      const response = await settingsAPI.getSettings();
-      if (response.success) {
-        const settings = response.settings;
-        setNavbarData({
-          businessName: settings.businessName || "Advait Collections",
-          logo: settings.logo || { url: "", publicId: "" },
-          phoneNumbers: settings.phoneNumbers?.length > 0 ? settings.phoneNumbers : navbarData.phoneNumbers,
-          socialMedia: {
-            ...navbarData.socialMedia,
-            ...settings.socialMedia
-          }
-        });
-      }
-    } catch (error) {
-      // Just log the error but DON'T redirect - keep using default data
-      console.log("Using default navbar data (settings not available)");
-      // Keep the default data - no redirect!
-    }
-  };
 
   // Add scroll effect
   useEffect(() => {
