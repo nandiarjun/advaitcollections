@@ -1,7 +1,6 @@
 import { useEffect, useState, useRef } from "react";
-import axios from "axios";
 import { Link } from "react-router-dom";
-import { settingsAPI } from "../services/api";
+import { productsAPI } from "../services/api";
 
 function Home() {
   const [products, setProducts] = useState([]);
@@ -14,17 +13,12 @@ function Home() {
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [latestProduct, setLatestProduct] = useState(null);
   const [visibleProducts, setVisibleProducts] = useState(8);
-  const [businessData, setBusinessData] = useState({
+
+  // Static business data (since settings API is protected)
+  const businessData = {
     businessName: "Advait Collections",
     tagline: "Premium Garments & Fashion Accessories",
-    description: "",
-    logo: { url: "", publicId: "" },
     address: {
-      street: "123 Fashion Street",
-      city: "Mumbai",
-      state: "Maharashtra",
-      country: "India",
-      pincode: "400053",
       fullAddress: "123 Fashion Street, Andheri West, Mumbai - 400053"
     },
     phoneNumbers: [
@@ -33,7 +27,6 @@ function Home() {
     emails: [
       { type: "general", email: "contact@advaitcollections.com", isPrimary: true }
     ],
-    socialMedia: {},
     businessHours: {
       monday: { open: "10:00", close: "21:00", closed: false },
       tuesday: { open: "10:00", close: "21:00", closed: false },
@@ -43,7 +36,7 @@ function Home() {
       saturday: { open: "10:00", close: "21:00", closed: false },
       sunday: { open: "11:00", close: "19:00", closed: false }
     }
-  });
+  };
 
   const scrollContainerRef = useRef(null);
 
@@ -74,7 +67,6 @@ function Home() {
 
   useEffect(() => {
     fetchProducts();
-    fetchBusinessData();
     
     const handleScroll = () => {
       setShowBackToTop(window.scrollY > 500);
@@ -84,23 +76,21 @@ function Home() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Auto scroll for hero products - continuous smooth scrolling
+  // Auto scroll for hero products
   useEffect(() => {
     const scrollContainer = scrollContainerRef.current;
     if (!scrollContainer || products.length === 0) return;
 
     let scrollAmount = 0;
-    const scrollStep = 0.8; // Reduced speed for smoother scrolling
+    const scrollStep = 0.8;
     const maxScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth;
     
     const scrollInterval = setInterval(() => {
       if (scrollContainer) {
         scrollAmount += scrollStep;
         
-        // Reset to start when reached the end
         if (scrollAmount >= maxScroll) {
           scrollAmount = 0;
-          // Instant reset without animation for seamless loop
           scrollContainer.scrollTo({
             left: 0,
             behavior: 'instant'
@@ -112,39 +102,18 @@ function Home() {
           });
         }
       }
-    }, 30); // Faster interval for smoother animation
+    }, 30);
 
     return () => clearInterval(scrollInterval);
   }, [products]);
 
-  const fetchBusinessData = async () => {
-    try {
-      const response = await settingsAPI.getSettings();
-      if (response.success) {
-        const settings = response.settings;
-        setBusinessData({
-          businessName: settings.businessName || "Advait Collections",
-          tagline: settings.tagline || "Premium Garments & Fashion Accessories",
-          description: settings.description || "",
-          logo: settings.logo || { url: "", publicId: "" },
-          address: settings.address || businessData.address,
-          phoneNumbers: settings.phoneNumbers?.length > 0 ? settings.phoneNumbers : businessData.phoneNumbers,
-          emails: settings.emails?.length > 0 ? settings.emails : businessData.emails,
-          socialMedia: settings.socialMedia || {},
-          businessHours: settings.businessHours || businessData.businessHours
-        });
-      }
-    } catch (error) {
-      console.error("Error fetching business data:", error);
-    }
-  };
-
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const res = await axios.get("http://localhost:5000/api/products");
+      const data = await productsAPI.getAllProducts();
       
-      const enhancedProducts = res.data.map((product) => ({
+      // Add random attributes for demo purposes
+      const enhancedProducts = data.map((product) => ({
         ...product,
         category: categories[Math.floor(Math.random() * categories.length)].name,
         size: sizes[Math.floor(Math.random() * sizes.length)],
@@ -158,7 +127,8 @@ function Home() {
         setLatestProduct(enhancedProducts[enhancedProducts.length - 1]);
       }
     } catch (error) {
-      console.error("Error fetching products", error);
+      console.error("Error fetching products:", error);
+      setProducts([]);
     } finally {
       setLoading(false);
     }
@@ -229,539 +199,6 @@ function Home() {
   const primaryPhone = businessData.phoneNumbers?.find(p => p.isPrimary) || businessData.phoneNumbers?.[0];
   const primaryEmail = businessData.emails?.find(e => e.isPrimary) || businessData.emails?.[0];
 
-  // Add custom CSS
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.textContent = `
-      /* Professional Compact Design */
-      :root {
-        --primary: #2563eb;
-        --primary-dark: #1d4ed8;
-        --secondary: #4b5563;
-        --background: #f5f5f5;
-        --surface: #ffffff;
-        --text: #111827;
-        --text-light: #6b7280;
-        --border: #e5e7eb;
-        --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
-        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-      }
-
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      body {
-        background: var(--background);
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      }
-
-      /* Hero Section - Light Grey */
-      .hero-section {
-        background: #f0f0f0;
-        padding: 2.5rem 0;
-        margin-bottom: 2rem;
-        border-bottom: 1px solid var(--border);
-      }
-
-      .hero-content {
-        color: var(--text);
-      }
-
-      .hero-title {
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin-bottom: 0.75rem;
-        line-height: 1.2;
-        color: #1e293b;
-      }
-
-      .hero-subtitle {
-        font-size: 1.1rem;
-        margin-bottom: 1.5rem;
-        color: #4b5563;
-      }
-
-      /* Horizontal Scroll Container */
-      .scroll-container {
-        display: flex;
-        overflow-x: auto;
-        gap: 1rem;
-        padding: 0.5rem 0;
-        scroll-behavior: smooth;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: thin;
-        cursor: grab;
-      }
-
-      .scroll-container::-webkit-scrollbar {
-        height: 4px;
-      }
-
-      .scroll-container::-webkit-scrollbar-track {
-        background: #d1d5db;
-        border-radius: 4px;
-      }
-
-      .scroll-container::-webkit-scrollbar-thumb {
-        background: var(--primary);
-        border-radius: 4px;
-      }
-
-      /* Hero Product Card - 3 cards visible initially */
-      .hero-product-card {
-        flex: 0 0 calc(33.333% - 0.67rem);
-        min-width: 200px;
-        background: white;
-        border-radius: 10px;
-        overflow: hidden;
-        box-shadow: var(--shadow);
-        transition: transform 0.2s ease;
-        border: 1px solid var(--border);
-      }
-
-      @media (max-width: 768px) {
-        .hero-product-card {
-          flex: 0 0 calc(50% - 0.5rem);
-          min-width: 160px;
-        }
-      }
-
-      @media (max-width: 480px) {
-        .hero-product-card {
-          flex: 0 0 calc(80% - 0.5rem);
-          min-width: 140px;
-        }
-      }
-
-      .hero-product-card:hover {
-        transform: translateY(-3px);
-        box-shadow: var(--shadow-md);
-        border-color: var(--primary);
-      }
-
-      .hero-product-image {
-        height: 150px;
-        overflow: hidden;
-      }
-
-      .hero-product-image img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transition: transform 0.3s ease;
-      }
-
-      .hero-product-card:hover .hero-product-image img {
-        transform: scale(1.05);
-      }
-
-      .hero-product-info {
-        padding: 0.75rem;
-      }
-
-      .hero-product-name {
-        font-weight: 600;
-        font-size: 0.9rem;
-        color: var(--text);
-        margin-bottom: 0.25rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .hero-product-price {
-        font-size: 1rem;
-        font-weight: 600;
-        color: var(--primary);
-      }
-
-      /* Category Grid */
-      .category-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-        gap: 0.75rem;
-        margin: 1.5rem 0;
-      }
-
-      .category-card {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        padding: 1rem;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.2s ease;
-      }
-
-      .category-card:hover {
-        border-color: var(--primary);
-        box-shadow: var(--shadow);
-      }
-
-      .category-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 0.75rem;
-        color: white;
-        font-size: 1.25rem;
-      }
-
-      .category-name {
-        font-weight: 500;
-        font-size: 0.9rem;
-        color: var(--text);
-        margin-bottom: 0.25rem;
-      }
-
-      .category-count {
-        font-size: 0.75rem;
-        color: var(--text-light);
-      }
-
-      /* Stats Cards - Compact */
-      .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-        gap: 1rem;
-        margin: 1.5rem 0;
-      }
-
-      .stat-card {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 1.25rem;
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-      }
-
-      .stat-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-      }
-
-      .stat-icon.blue { background: #dbeafe; color: #1e40af; }
-      .stat-icon.green { background: #dcfce7; color: #166534; }
-      .stat-icon.yellow { background: #fef9c3; color: #854d0e; }
-
-      .stat-info h3 {
-        font-size: 1.5rem;
-        font-weight: 600;
-        color: var(--text);
-        line-height: 1.2;
-      }
-
-      .stat-info p {
-        font-size: 0.8rem;
-        color: var(--text-light);
-      }
-
-      /* Products Grid */
-      .products-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-        gap: 1.25rem;
-        margin: 1.5rem 0;
-      }
-
-      .product-card {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        overflow: hidden;
-        transition: all 0.2s ease;
-      }
-
-      .product-card:hover {
-        box-shadow: var(--shadow-md);
-        border-color: var(--primary);
-      }
-
-      .product-image {
-        height: 200px;
-        overflow: hidden;
-        position: relative;
-      }
-
-      .product-image img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transition: transform 0.3s ease;
-      }
-
-      .product-card:hover .product-image img {
-        transform: scale(1.05);
-      }
-
-      .product-badge {
-        position: absolute;
-        top: 0.5rem;
-        right: 0.5rem;
-        background: var(--primary);
-        color: white;
-        padding: 0.2rem 0.6rem;
-        border-radius: 4px;
-        font-size: 0.7rem;
-        font-weight: 500;
-      }
-
-      .product-info {
-        padding: 1rem;
-      }
-
-      .product-name {
-        font-weight: 600;
-        font-size: 1rem;
-        color: var(--text);
-        margin-bottom: 0.5rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .product-tags {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.4rem;
-        margin-bottom: 0.75rem;
-      }
-
-      .product-tag {
-        background: #f3f4f6;
-        padding: 0.2rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.7rem;
-        color: var(--text-light);
-      }
-
-      .product-price {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 0.75rem;
-      }
-
-      .price {
-        font-size: 1.25rem;
-        font-weight: 600;
-        color: var(--primary);
-      }
-
-      .stock {
-        font-size: 0.8rem;
-        color: var(--text-light);
-      }
-
-      .stock-bar {
-        height: 4px;
-        background: #e5e7eb;
-        border-radius: 2px;
-        overflow: hidden;
-        margin-bottom: 0.75rem;
-      }
-
-      .stock-fill {
-        height: 100%;
-        background: var(--primary);
-        transition: width 0.3s ease;
-      }
-
-      .view-link {
-        color: var(--primary);
-        text-decoration: none;
-        font-size: 0.9rem;
-        font-weight: 500;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.25rem;
-      }
-
-      .view-link:hover {
-        color: var(--primary-dark);
-      }
-
-      .view-link i {
-        font-size: 0.8rem;
-        transition: transform 0.2s ease;
-      }
-
-      .view-link:hover i {
-        transform: translateX(3px);
-      }
-
-      /* Business Info - Compact */
-      .business-card {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 2rem;
-        margin: 2rem 0;
-        box-shadow: var(--shadow);
-      }
-
-      .info-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-        gap: 1.5rem;
-      }
-
-      .info-item {
-        display: flex;
-        gap: 1rem;
-      }
-
-      .info-icon {
-        width: 40px;
-        height: 40px;
-        background: #dbeafe;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--primary);
-        font-size: 1.25rem;
-      }
-
-      .info-content h4 {
-        font-size: 0.9rem;
-        font-weight: 600;
-        color: var(--text);
-        margin-bottom: 0.25rem;
-      }
-
-      .info-content p, .info-content a {
-        font-size: 0.85rem;
-        color: var(--text-light);
-        text-decoration: none;
-      }
-
-      .info-content a:hover {
-        color: var(--primary);
-        text-decoration: underline;
-      }
-
-      .hours-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-      }
-
-      .hour-item {
-        display: flex;
-        justify-content: space-between;
-        font-size: 0.85rem;
-        padding: 0.25rem 0;
-        border-bottom: 1px dashed var(--border);
-      }
-
-      .hour-item:last-child {
-        border-bottom: none;
-      }
-
-      .hour-day {
-        font-weight: 500;
-        color: var(--text);
-      }
-
-      .hour-time {
-        color: var(--text-light);
-      }
-
-      /* See More Button */
-      .see-more {
-        text-align: center;
-        margin: 2rem 0;
-      }
-
-      .see-more-btn {
-        background: white;
-        border: 2px solid var(--primary);
-        color: var(--primary);
-        padding: 0.6rem 2rem;
-        border-radius: 30px;
-        font-weight: 500;
-        font-size: 0.9rem;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-      }
-
-      .see-more-btn:hover {
-        background: var(--primary);
-        color: white;
-      }
-
-      /* Back to Top */
-      .back-to-top {
-        position: fixed;
-        bottom: 2rem;
-        right: 2rem;
-        width: 44px;
-        height: 44px;
-        background: var(--primary);
-        color: white;
-        border: none;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        box-shadow: var(--shadow-md);
-        transition: all 0.2s ease;
-        z-index: 1000;
-      }
-
-      .back-to-top:hover {
-        background: var(--primary-dark);
-        transform: translateY(-3px);
-      }
-
-      .back-to-top.hidden {
-        display: none;
-      }
-
-      /* Responsive */
-      @media (max-width: 768px) {
-        .hero-title {
-          font-size: 2rem;
-        }
-        
-        .hero-subtitle {
-          font-size: 1rem;
-        }
-        
-        .business-card {
-          padding: 1.5rem;
-        }
-        
-        .info-grid {
-          grid-template-columns: 1fr;
-        }
-      }
-    `;
-    document.head.appendChild(style);
-    
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
-
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -784,7 +221,7 @@ function Home() {
           <div className="spinner-border text-primary mb-3" style={{ width: "2.5rem", height: "2.5rem" }} role="status">
             <span className="visually-hidden">Loading...</span>
           </div>
-          <p className="text-muted">Loading...</p>
+          <p className="text-muted">Loading amazing products...</p>
         </div>
       </div>
     );
@@ -792,7 +229,7 @@ function Home() {
 
   return (
     <div className="home-page">
-      {/* Hero Section - Light Grey with Auto-Scrolling Cards */}
+      {/* Hero Section */}
       <section className="hero-section">
         <div className="container">
           <div className="row align-items-center">
@@ -817,26 +254,31 @@ function Home() {
                 ref={scrollContainerRef}
                 className="scroll-container"
               >
-                {/* Duplicate products to create seamless infinite scroll effect */}
-                {products.concat(products).map((product, index) => (
-                  <Link to={`/product/${product._id}`} key={`${product._id}-${index}`} style={{ textDecoration: 'none' }}>
-                    <div className="hero-product-card">
-                      <div className="hero-product-image">
-                        <img
-                          src={product.image || "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=300&auto=format"}
-                          alt={product.name}
-                          onError={(e) => {
-                            e.target.src = "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=300&auto=format";
-                          }}
-                        />
+                {products.length > 0 ? (
+                  products.concat(products).map((product, index) => (
+                    <Link to={`/product/${product._id}`} key={`${product._id}-${index}`} style={{ textDecoration: 'none' }}>
+                      <div className="hero-product-card">
+                        <div className="hero-product-image">
+                          <img
+                            src={product.image || "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=300&auto=format"}
+                            alt={product.name}
+                            onError={(e) => {
+                              e.target.src = "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=300&auto=format";
+                            }}
+                          />
+                        </div>
+                        <div className="hero-product-info">
+                          <div className="hero-product-name">{product.name}</div>
+                          <div className="hero-product-price">₹{product.sellingRate}</div>
+                        </div>
                       </div>
-                      <div className="hero-product-info">
-                        <div className="hero-product-name">{product.name}</div>
-                        <div className="hero-product-price">₹{product.sellingRate}</div>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
+                    </Link>
+                  ))
+                ) : (
+                  <div className="text-center py-4">
+                    <p className="text-muted">No products available</p>
+                  </div>
+                )}
               </div>
               <div className="text-end mt-2">
                 <Link to="/products" className="text-dark text-decoration-none small">
@@ -1008,7 +450,7 @@ function Home() {
                   </div>
                   <div className="info-content">
                     <h4>Address</h4>
-                    <p>{businessData.address?.fullAddress || `${businessData.address?.street}, ${businessData.address?.city}, ${businessData.address?.state} - ${businessData.address?.pincode}`}</p>
+                    <p>{businessData.address?.fullAddress}</p>
                   </div>
                 </div>
                 
@@ -1041,7 +483,7 @@ function Home() {
             <div className="col-md-6">
               <h3 className="fs-5 fw-semibold mb-3">Store Hours</h3>
               <div className="hours-list">
-                {businessData.businessHours && Object.entries(businessData.businessHours).map(([day, hours]) => (
+                {Object.entries(businessData.businessHours).map(([day, hours]) => (
                   <div key={day} className="hour-item">
                     <span className="hour-day text-capitalize">{day}</span>
                     <span className="hour-time">
