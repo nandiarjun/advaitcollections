@@ -34,7 +34,7 @@ api.interceptors.request.use(
 );
 
 /* =========================================
-   RESPONSE INTERCEPTOR (FIXED VERSION)
+   RESPONSE INTERCEPTOR (SAFE VERSION)
 ========================================= */
 
 api.interceptors.response.use(
@@ -43,11 +43,12 @@ api.interceptors.response.use(
     const status = error.response?.status;
     const currentPath = window.location.pathname;
 
-    const isAdminRoute = currentPath.startsWith("/admin");
+    // 🚀 Only redirect if inside admin dashboard area
+    const isAdminDashboard =
+      currentPath.startsWith("/admin-dashboard");
 
-    // ✅ Only redirect if user is inside admin route
-    if (status === 401 && isAdminRoute) {
-      console.warn("Unauthorized admin access. Redirecting to login...");
+    if (status === 401 && isAdminDashboard) {
+      console.warn("Unauthorized admin access. Redirecting...");
       localStorage.removeItem("adminToken");
       window.location.href = "/admin-login";
     }
@@ -57,33 +58,22 @@ api.interceptors.response.use(
 );
 
 /* =========================================
-   ERROR HANDLER
+   SAFE ERROR HANDLER
 ========================================= */
 
 const handleApiError = (error) => {
-  if (error.response) {
-    throw {
-      success: false,
-      status: error.response.status,
-      message:
-        error.response.data?.message ||
-        `Error ${error.response.status}`,
-    };
-  } else if (error.request) {
-    throw {
-      success: false,
-      message: "Unable to connect to server.",
-    };
-  } else {
-    throw {
-      success: false,
-      message: error.message,
-    };
-  }
+  return {
+    success: false,
+    status: error.response?.status,
+    message:
+      error.response?.data?.message ||
+      error.message ||
+      "Something went wrong",
+  };
 };
 
 /* =========================================
-   SETTINGS API (PUBLIC + ADMIN SAFE)
+   SETTINGS API (PUBLIC SAFE)
 ========================================= */
 
 export const settingsAPI = {
@@ -92,11 +82,12 @@ export const settingsAPI = {
       const res = await api.get("/settings");
       return res.data;
     } catch (error) {
-      // 🔥 IMPORTANT: Don't break public pages
-      if (error.response?.status === 401) {
-        return { success: false };
-      }
-      throw handleApiError(error);
+      // ⚠️ Do NOT break public pages
+      console.warn("Settings fetch failed (safe ignore).");
+      return {
+        success: false,
+        settings: {},
+      };
     }
   },
 };
@@ -116,45 +107,23 @@ export const productsAPI = {
     return res.data;
   },
 
-  addProduct: async (data, token) => {
-    const res = await axios.post(
-      `${API_URL}/products/add`,
-      data,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
+  addProduct: async (data) => {
+    const res = await api.post("/products/add", data);
     return res.data;
   },
 
-  updateProduct: async (id, data, token) => {
-    const res = await axios.put(
-      `${API_URL}/products/update/${id}`,
-      data,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
+  updateProduct: async (id, data) => {
+    const res = await api.put(`/products/update/${id}`, data);
     return res.data;
   },
 
-  deleteProduct: async (id, token) => {
-    const res = await axios.delete(
-      `${API_URL}/products/delete/${id}`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
+  deleteProduct: async (id) => {
+    const res = await api.delete(`/products/delete/${id}`);
     return res.data;
   },
 
-  getDashboardSummary: async (token) => {
-    const res = await axios.get(
-      `${API_URL}/products/dashboard-summary`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
+  getDashboardSummary: async () => {
+    const res = await api.get("/products/dashboard-summary");
     return res.data;
   },
 };
@@ -164,24 +133,13 @@ export const productsAPI = {
 ========================================= */
 
 export const salesAPI = {
-  sellProduct: async (data, token) => {
-    const res = await axios.post(
-      `${API_URL}/sales/sell`,
-      data,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
+  sellProduct: async (data) => {
+    const res = await api.post("/sales/sell", data);
     return res.data;
   },
 
-  getSummary: async (token) => {
-    const res = await axios.get(
-      `${API_URL}/sales/summary`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
+  getSummary: async () => {
+    const res = await api.get("/sales/summary");
     return res.data;
   },
 };
@@ -192,10 +150,7 @@ export const salesAPI = {
 
 export const authAPI = {
   adminLogin: async (credentials) => {
-    const res = await axios.post(
-      `${API_URL}/auth/admin-login`,
-      credentials
-    );
+    const res = await api.post("/auth/admin-login", credentials);
 
     if (res.data.token) {
       localStorage.setItem("adminToken", res.data.token);
