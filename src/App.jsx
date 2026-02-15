@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -21,6 +22,32 @@ import SalesSummary from "./pages/SalesSummary";
 import AdminSettings from "./pages/AdminSettings";
 
 function App() {
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate a quick loading state to ensure everything is ready
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh',
+        background: '#f5f5f5'
+      }}>
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Router>
       <Routes>
@@ -58,7 +85,6 @@ function App() {
           }
         />
 
-        {/* New Products Route */}
         <Route
           path="/products"
           element={
@@ -70,7 +96,6 @@ function App() {
           }
         />
 
-        {/* New Product Details Route */}
         <Route
           path="/product/:id"
           element={
@@ -90,10 +115,8 @@ function App() {
           path="/admin-dashboard"
           element={
             <ProtectedRoute>
-              <>
-                <AdminNavbar />
-                <AdminDashboard />
-              </>
+              <AdminNavbar />
+              <AdminDashboard />
             </ProtectedRoute>
           }
         />
@@ -102,10 +125,8 @@ function App() {
           path="/admin-dashboard/add-product"
           element={
             <ProtectedRoute>
-              <>
-                <AdminNavbar />
-                <AddProduct />
-              </>
+              <AdminNavbar />
+              <AddProduct />
             </ProtectedRoute>
           }
         />
@@ -114,10 +135,8 @@ function App() {
           path="/admin-dashboard/sales"
           element={
             <ProtectedRoute>
-              <>
-                <AdminNavbar />
-                <Sales />
-              </>
+              <AdminNavbar />
+              <Sales />
             </ProtectedRoute>
           }
         />
@@ -126,10 +145,8 @@ function App() {
           path="/admin-dashboard/summary"
           element={
             <ProtectedRoute>
-              <>
-                <AdminNavbar />
-                <SalesSummary />
-              </>
+              <AdminNavbar />
+              <SalesSummary />
             </ProtectedRoute>
           }
         />
@@ -138,15 +155,13 @@ function App() {
           path="/admin-dashboard/settings"
           element={
             <ProtectedRoute>
-              <>
-                <AdminNavbar />
-                <AdminSettings />
-              </>
+              <AdminNavbar />
+              <AdminSettings />
             </ProtectedRoute>
           }
         />
 
-        {/* 404 Not Found Route - Optional */}
+        {/* 404 Not Found Route */}
         <Route
           path="*"
           element={
