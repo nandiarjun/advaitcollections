@@ -1,7 +1,7 @@
 import axios from "axios";
 
-// Base API URL - Use environment variable with fallback
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+// Base API URL - Use environment variable with fallback to production URL
+const API_URL = import.meta.env.VITE_API_URL || "https://advaitcollections-backend.onrender.com/api";
 
 // Create axios instance with default config
 const api = axios.create({
