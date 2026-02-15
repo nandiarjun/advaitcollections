@@ -24,7 +24,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* ================= PUBLIC ROUTES (NO PROTECTION NEEDED) ================= */}
+        {/* ========== PUBLIC ROUTES - NO PROTECTION ========== */}
         <Route
           path="/"
           element={
@@ -80,10 +80,10 @@ function App() {
           }
         />
 
-        {/* Admin Login - Public */}
+        {/* ========== ADMIN LOGIN - PUBLIC ========== */}
         <Route path="/admin-login" element={<AdminLogin />} />
 
-        {/* ================= ADMIN PROTECTED ROUTES (ONLY THESE NEED TOKEN) ================= */}
+        {/* ========== ADMIN PROTECTED ROUTES - ONLY THESE NEED TOKEN ========== */}
         <Route
           path="/admin-dashboard"
           element={
@@ -134,15 +134,15 @@ function App() {
           }
         />
 
-        {/* 404 Not Found Route */}
+        {/* 404 Page */}
         <Route
           path="*"
           element={
             <div className="container text-center py-5">
-              <h1 className="display-1">404</h1>
+              <h1>404</h1>
               <h2>Page Not Found</h2>
-              <p className="text-muted">The page you are looking for doesn't exist.</p>
-              <a href="/" className="btn btn-primary mt-3">Go Home</a>
+              <p>The page you are looking for doesn't exist.</p>
+              <a href="/" className="btn btn-primary">Go Home</a>
             </div>
           }
         />
