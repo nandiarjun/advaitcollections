@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    
+    <!-- Favicon - Using logo from assets -->
+    <link rel="icon" type="image/jpeg" href="/src/assets/logo.jpg" />
+    
+    <!-- Alternative favicon formats for better compatibility -->
+    <link rel="icon" type="image/jpeg" sizes="32x32" href="/src/assets/logo.jpg">
+    <link rel="icon" type="image/jpeg" sizes="16x16" href="/src/assets/logo.jpg">
+    <link rel="apple-touch-icon" href="/src/assets/logo.jpg">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- Primary Meta Tags -->
+    <title>Advait Collections - Premium Fashion & Lifestyle</title>
+    <meta name="title" content="Advait Collections - Premium Fashion & Lifestyle">
+    <meta name="description" content="Discover premium fashion and lifestyle products at Advait Collections. Quality clothing, accessories, and more with the best prices.">
+    <meta name="keywords" content="fashion, clothing, lifestyle, premium brands, online shopping, Advait Collections">
+    <meta name="author" content="Advait Collections">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://advaitcollections.com/">
+    <meta property="og:title" content="Advait Collections - Premium Fashion & Lifestyle">
+    <meta property="og:description" content="Discover premium fashion and lifestyle products at Advait Collections. Quality clothing, accessories, and more with the best prices.">
+    <meta property="og:image" content="/src/assets/logo.jpg">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://advaitcollections.com/">
+    <meta property="twitter:title" content="Advait Collections - Premium Fashion & Lifestyle">
+    <meta property="twitter:description" content="Discover premium fashion and lifestyle products at Advait Collections. Quality clothing, accessories, and more with the best prices.">
+    <meta property="twitter:image" content="/src/assets/logo.jpg">
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Google Fonts - Playfair Display & Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- AOS Animation Library -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Poppins', sans-serif;
+        overflow-x: hidden;
+        background-color: #f8f9fa;
+      }
+
+      h1, h2, h3, h4, h5, h6 {
+        font-family: 'Playfair Display', serif;
+      }
+
+      /* Custom Scrollbar - Updated to match your brand colors */
+      ::-webkit-scrollbar {
+        width: 10px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: linear-gradient(45deg, #2563eb, #3b82f6);
+        border-radius: 5px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(45deg, #1d4ed8, #2563eb);
+      }
+
+      /* Loading Animation - Updated to match your brand */
+      .app-loading {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #0c0f15 0%, #1a1e26 100%);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        transition: opacity 0.5s ease;
+      }
+
+      .app-loading.fade-out {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .loader {
+        width: 80px;
+        height: 80px;
+        border: 5px solid rgba(59, 130, 246, 0.1);
+        border-radius: 50%;
+        border-top-color: #3b82f6;
+        animation: spin 1s ease-in-out infinite;
+      }
+
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+
+      /* Toast Notification Container */
+      .toast-container {
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        z-index: 9999;
+      }
+
+      /* Fade Animations */
+      .fade-enter {
+        opacity: 0;
+      }
+
+      .fade-enter-active {
+        opacity: 1;
+        transition: opacity 300ms ease-in;
+      }
+
+      .fade-exit {
+        opacity: 1;
+      }
+
+      .fade-exit-active {
+        opacity: 0;
+        transition: opacity 300ms ease-out;
+      }
+
+      /* Favicon preview style (optional, remove if not needed) */
+      .favicon-preview {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    
+    <!-- Hidden favicon preview (optional) -->
+    <div class="favicon-preview">
+      <img src="/src/assets/logo.jpg" alt="Favicon Preview" style="display: none;">
+    </div>
+    
+    <!-- Loading Spinner (will be hidden by React) -->
+    <div id="loading-spinner" class="app-loading">
+      <div class="loader"></div>
+    </div>
+
+    <!-- Toast Container for Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    
+    <!-- AOS Animation Library JS -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    
+    <!-- Initialize AOS -->
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        AOS.init({
+          duration: 800,
+          once: true,
+          offset: 100
+        });
+      });
+    </script>
+    
+    <!-- Hide loading spinner when React mounts -->
+    <script>
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          const spinner = document.getElementById('loading-spinner');
+          if (spinner) {
+            spinner.classList.add('fade-out');
+            setTimeout(function() {
+              spinner.style.display = 'none';
+            }, 500);
+          }
+        }, 500);
+      });
+    </script>
+    
+    <!-- Main React Script -->
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
