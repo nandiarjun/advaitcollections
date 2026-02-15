@@ -34,7 +34,7 @@ api.interceptors.request.use(
 );
 
 /* =========================================
-   RESPONSE INTERCEPTOR (SAFE VERSION)
+   RESPONSE INTERCEPTOR
 ========================================= */
 
 api.interceptors.response.use(
@@ -43,12 +43,9 @@ api.interceptors.response.use(
     const status = error.response?.status;
     const currentPath = window.location.pathname;
 
-    // 🚀 Only redirect if inside admin dashboard area
-    const isAdminDashboard =
-      currentPath.startsWith("/admin-dashboard");
+    const isAdminRoute = currentPath.startsWith("/admin-dashboard");
 
-    if (status === 401 && isAdminDashboard) {
-      console.warn("Unauthorized admin access. Redirecting...");
+    if (status === 401 && isAdminRoute) {
       localStorage.removeItem("adminToken");
       window.location.href = "/admin-login";
     }
@@ -58,22 +55,7 @@ api.interceptors.response.use(
 );
 
 /* =========================================
-   SAFE ERROR HANDLER
-========================================= */
-
-const handleApiError = (error) => {
-  return {
-    success: false,
-    status: error.response?.status,
-    message:
-      error.response?.data?.message ||
-      error.message ||
-      "Something went wrong",
-  };
-};
-
-/* =========================================
-   SETTINGS API (PUBLIC SAFE)
+   SETTINGS API
 ========================================= */
 
 export const settingsAPI = {
@@ -82,12 +64,8 @@ export const settingsAPI = {
       const res = await api.get("/settings");
       return res.data;
     } catch (error) {
-      // ⚠️ Do NOT break public pages
       console.warn("Settings fetch failed (safe ignore).");
-      return {
-        success: false,
-        settings: {},
-      };
+      return { success: false, settings: {} };
     }
   },
 };
@@ -165,13 +143,4 @@ export const authAPI = {
   },
 };
 
-/* =========================================
-   EXPORT
-========================================= */
-
-export default {
-  settings: settingsAPI,
-  products: productsAPI,
-  sales: salesAPI,
-  auth: authAPI,
-};
+export default api;
