@@ -1,5 +1,4 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { useEffect, useState } from "react";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -22,36 +21,10 @@ import SalesSummary from "./pages/SalesSummary";
 import AdminSettings from "./pages/AdminSettings";
 
 function App() {
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    // Simulate a quick loading state to ensure everything is ready
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 100);
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (isLoading) {
-    return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh',
-        background: '#f5f5f5'
-      }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <Router>
       <Routes>
-        {/* ================= PUBLIC ROUTES ================= */}
+        {/* ================= PUBLIC ROUTES (NO PROTECTION NEEDED) ================= */}
         <Route
           path="/"
           element={
@@ -107,10 +80,10 @@ function App() {
           }
         />
 
-        {/* Admin Login - No Navbar/Footer */}
+        {/* Admin Login - Public */}
         <Route path="/admin-login" element={<AdminLogin />} />
 
-        {/* ================= ADMIN PROTECTED ROUTES ================= */}
+        {/* ================= ADMIN PROTECTED ROUTES (ONLY THESE NEED TOKEN) ================= */}
         <Route
           path="/admin-dashboard"
           element={
