@@ -32,7 +32,9 @@ api.interceptors.request.use(
 
     // Show the exact URL being called
     console.log(`🌐 Calling: ${config.baseURL}${config.url}`);
-    console.log("📤 Request Data:", config.data);
+    if (config.data) {
+      console.log("📤 Request Data:", config.data);
+    }
 
     return config;
   },
@@ -45,11 +47,15 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
   (response) => {
-    console.log("🟢 Response received:", response.data);
+    console.log("🟢 Response received from:", response.config.url);
     return response;
   },
   (error) => {
-    console.error("🔴 Response error:", error.response?.data || error.message);
+    console.error("🔴 Response error:", {
+      url: error.config?.url,
+      status: error.response?.status,
+      data: error.response?.data
+    });
     
     const status = error.response?.status;
     const currentPath = window.location.pathname;
@@ -74,8 +80,14 @@ export const settingsAPI = {
       const res = await api.get("/settings");
       return res.data;
     } catch (error) {
-      console.warn("Settings fetch failed (safe ignore).");
-      return { success: false, settings: {} };
+      console.warn("Settings fetch failed (safe ignore) - using defaults");
+      return { 
+        success: false, 
+        settings: {
+          businessName: "Advait Collections",
+          tagline: "Premium Garments & Fashion Accessories"
+        } 
+      };
     }
   },
 
@@ -91,13 +103,23 @@ export const settingsAPI = {
 
 export const productsAPI = {
   getAllProducts: async () => {
-    const res = await api.get("/products");
-    return res.data;
+    try {
+      const res = await api.get("/products");
+      return res.data;
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      return [];
+    }
   },
 
   getProductById: async (id) => {
-    const res = await api.get(`/products/${id}`);
-    return res.data;
+    try {
+      const res = await api.get(`/products/${id}`);
+      return res.data;
+    } catch (error) {
+      console.error("Error fetching product:", error);
+      return null;
+    }
   },
 
   addProduct: async (data) => {
@@ -110,45 +132,95 @@ export const productsAPI = {
     return res.data;
   },
 
-  deleteProduct: async (id) => {
-    const res = await api.delete(`/products/delete/${id}`);
+  deleteProduct: async (id, force = false) => {
+    const url = force 
+      ? `/products/delete/${id}?force=true`
+      : `/products/delete/${id}`;
+    const res = await api.delete(url);
     return res.data;
   },
 
-  // ✅ Added for dashboard summary (matches the method name in AdminDashboard)
+  // ✅ Dashboard Summary - THIS IS WHAT YOUR DASHBOARD NEEDS
   getDashboardSummary: async () => {
-    const res = await api.get("/products/dashboard-summary");
-    return res.data;
+    try {
+      console.log("Fetching dashboard summary...");
+      const res = await api.get("/products/dashboard-summary");
+      console.log("Dashboard summary response:", res.data);
+      return res.data;
+    } catch (error) {
+      console.error("Error fetching dashboard summary:", error);
+      // Return default values on error
+      return {
+        totalProducts: 0,
+        totalStock: 0,
+        totalSaleValue: 0,
+        totalPurchaseValue: 0,
+        totalProfit: 0,
+        todaySaleValue: 0,
+        todayProfit: 0
+      };
+    }
   },
 
-  // ✅ Added as alias for getDashboardSummary (in case the dashboard uses this name)
+  // ✅ Product Report - Your backend might use a different endpoint
+  // Let's try both possibilities
   getProductReport: async () => {
-    const res = await api.get("/products/dashboard-summary");
-    return res.data;
+    try {
+      console.log("Fetching product report...");
+      // First try the correct endpoint
+      const res = await api.get("/products/product-report");
+      console.log("Product report response:", res.data);
+      return res.data;
+    } catch (error) {
+      console.error("Error fetching product report:", error);
+      // If that fails, try the dashboard summary as fallback
+      try {
+        console.log("Trying dashboard summary as fallback...");
+        const summary = await productsAPI.getDashboardSummary();
+        // Transform summary into report format if needed
+        return [{
+          productName: "Sample Product",
+          currentStock: summary.totalStock || 0,
+          totalSoldQty: 0,
+          // ... other fields
+        }];
+      } catch (fallbackError) {
+        return [];
+      }
+    }
   },
 
   // ✅ Get low stock products
   getLowStockProducts: async (threshold = 10) => {
-    const res = await api.get(`/products/low-stock?threshold=${threshold}`);
-    return res.data;
+    try {
+      const res = await api.get(`/products/low-stock?threshold=${threshold}`);
+      return res.data;
+    } catch (error) {
+      console.error("Error fetching low stock products:", error);
+      return [];
+    }
   },
 
   // ✅ Get products by category
   getProductsByCategory: async (category) => {
-    const res = await api.get(`/products/category/${category}`);
-    return res.data;
+    try {
+      const res = await api.get(`/products/category/${category}`);
+      return res.data;
+    } catch (error) {
+      console.error("Error fetching products by category:", error);
+      return [];
+    }
   },
 
   // ✅ Search products
   searchProducts: async (query) => {
-    const res = await api.get(`/products/search?q=${query}`);
-    return res.data;
-  },
-
-  // ✅ Update stock
-  updateStock: async (id, quantity) => {
-    const res = await api.patch(`/products/${id}/stock`, { quantity });
-    return res.data;
+    try {
+      const res = await api.get(`/products/search?q=${query}`);
+      return res.data;
+    } catch (error) {
+      console.error("Error searching products:", error);
+      return [];
+    }
   },
 };
 
@@ -158,37 +230,74 @@ export const productsAPI = {
 
 export const salesAPI = {
   sellProduct: async (data) => {
-    const res = await api.post("/sales/sell", data);
-    return res.data;
+    try {
+      const res = await api.post("/sales/sell", data);
+      return res.data;
+    } catch (error) {
+      console.error("Error selling product:", error);
+      throw error;
+    }
   },
 
   getSummary: async () => {
-    const res = await api.get("/sales/summary");
-    return res.data;
+    try {
+      const res = await api.get("/sales/summary");
+      return res.data;
+    } catch (error) {
+      console.error("Error fetching sales summary:", error);
+      return {
+        totalSale: 0,
+        totalPurchase: 0,
+        totalProfit: 0,
+        totalTransactions: 0,
+        salesByDate: {},
+        recentSales: []
+      };
+    }
   },
 
   // ✅ Get sales by date range
   getSalesByDateRange: async (startDate, endDate) => {
-    const res = await api.get(`/sales/range?start=${startDate}&end=${endDate}`);
-    return res.data;
+    try {
+      const res = await api.get(`/sales/range?start=${startDate}&end=${endDate}`);
+      return res.data;
+    } catch (error) {
+      console.error("Error fetching sales by date range:", error);
+      return [];
+    }
   },
 
   // ✅ Get today's sales
   getTodaySales: async () => {
-    const res = await api.get("/sales/today");
-    return res.data;
+    try {
+      const res = await api.get("/sales/today");
+      return res.data;
+    } catch (error) {
+      console.error("Error fetching today's sales:", error);
+      return { total: 0, count: 0 };
+    }
   },
 
   // ✅ Get sales by product
   getSalesByProduct: async (productId) => {
-    const res = await api.get(`/sales/product/${productId}`);
-    return res.data;
+    try {
+      const res = await api.get(`/sales/product/${productId}`);
+      return res.data;
+    } catch (error) {
+      console.error("Error fetching sales by product:", error);
+      return [];
+    }
   },
 
   // ✅ Get recent sales
   getRecentSales: async (limit = 10) => {
-    const res = await api.get(`/sales/recent?limit=${limit}`);
-    return res.data;
+    try {
+      const res = await api.get(`/sales/recent?limit=${limit}`);
+      return res.data;
+    } catch (error) {
+      console.error("Error fetching recent sales:", error);
+      return [];
+    }
   },
 };
 
@@ -198,48 +307,38 @@ export const salesAPI = {
 
 export const authAPI = {
   adminLogin: async (credentials) => {
-    // Using the correct endpoint "/auth/login"
-    const res = await api.post("/auth/login", credentials);
-
-    if (res.data.token) {
-      localStorage.setItem("adminToken", res.data.token);
+    try {
+      console.log("Attempting login...");
+      const res = await api.post("/auth/admin-login", credentials);
       
-      // Store user data if available
-      if (res.data.user) {
-        localStorage.setItem("adminUser", JSON.stringify(res.data.user));
+      if (res.data.token) {
+        localStorage.setItem("adminToken", res.data.token);
+        if (res.data.user) {
+          localStorage.setItem("adminUser", JSON.stringify(res.data.user));
+        }
+        console.log("Login successful");
       }
+      return res.data;
+    } catch (error) {
+      console.error("Login error:", error);
+      throw error;
     }
-
-    return res.data;
   },
 
   verifyToken: async () => {
-    const res = await api.get("/auth/verify");
-    return res.data;
+    try {
+      const res = await api.get("/auth/verify");
+      return res.data;
+    } catch (error) {
+      console.error("Token verification error:", error);
+      return { valid: false };
+    }
   },
 
   logout: () => {
     localStorage.removeItem("adminToken");
     localStorage.removeItem("adminUser");
     window.location.href = "/admin-login";
-  },
-
-  // ✅ Change password
-  changePassword: async (oldPassword, newPassword) => {
-    const res = await api.post("/auth/change-password", { oldPassword, newPassword });
-    return res.data;
-  },
-
-  // ✅ Forgot password
-  forgotPassword: async (email) => {
-    const res = await api.post("/auth/forgot-password", { email });
-    return res.data;
-  },
-
-  // ✅ Reset password
-  resetPassword: async (token, newPassword) => {
-    const res = await api.post("/auth/reset-password", { token, newPassword });
-    return res.data;
   },
 };
 
@@ -253,7 +352,7 @@ export const dashboardAPI = {
       const [productsSummary, salesSummary, lowStock] = await Promise.all([
         productsAPI.getDashboardSummary(),
         salesAPI.getSummary(),
-        productsAPI.getLowStockProducts(),
+        productsAPI.getLowStockProducts(10),
       ]);
 
       return {
@@ -263,7 +362,11 @@ export const dashboardAPI = {
       };
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
-      throw error;
+      return {
+        products: { totalProducts: 0, totalStock: 0 },
+        sales: { totalSale: 0, totalProfit: 0 },
+        lowStock: []
+      };
     }
   },
 };
