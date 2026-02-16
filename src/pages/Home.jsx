@@ -41,14 +41,14 @@ function Home() {
 
   const scrollContainerRef = useRef(null);
 
-  // Clothing categories
+  // Clothing categories with updated colors
   const categories = [
-    { id: 1, name: "Men's Wear", icon: "bi-person-standing", color: "#4A90E2" },
-    { id: 2, name: "Women's Wear", icon: "bi-person-standing-dress", color: "#E84C3D" },
-    { id: 3, name: "Kids Wear", icon: "bi-emoji-smile", color: "#F1C40F" },
-    { id: 4, name: "Winter Wear", icon: "bi-snow", color: "#3498DB" },
-    { id: 5, name: "Footwear", icon: "bi-shoe-prints", color: "#E67E22" },
-    { id: 6, name: "Accessories", icon: "bi-gem", color: "#9B59B6" }
+    { id: 1, name: "Men's Wear", icon: "bi-person-standing", color: "#2563eb", lightColor: "#dbeafe" },
+    { id: 2, name: "Women's Wear", icon: "bi-person-standing-dress", color: "#db2777", lightColor: "#fce7f3" },
+    { id: 3, name: "Kids Wear", icon: "bi-emoji-smile", color: "#ea580c", lightColor: "#ffedd5" },
+    { id: 4, name: "Winter Wear", icon: "bi-snow", color: "#0891b2", lightColor: "#cffafe" },
+    { id: 5, name: "Footwear", icon: "bi-shoe-prints", color: "#65a30d", lightColor: "#ecfccb" },
+    { id: 6, name: "Accessories", icon: "bi-gem", color: "#9333ea", lightColor: "#f3e8ff" }
   ];
 
   // Available sizes
@@ -132,7 +132,6 @@ function Home() {
         });
       }
     } catch (error) {
-      // Silently use default data - no console errors
       console.log("Using default business data");
     } finally {
       setBusinessLoading(false);
@@ -144,7 +143,6 @@ function Home() {
       setLoading(true);
       const data = await productsAPI.getAllProducts();
       
-      // Add random attributes for demo purposes
       const enhancedProducts = data.map((product) => ({
         ...product,
         category: categories[Math.floor(Math.random() * categories.length)].name,
@@ -236,9 +234,9 @@ function Home() {
   };
 
   const getStockStatus = (quantity) => {
-    if (quantity <= 0) return { text: 'Out of Stock', class: 'danger' };
-    if (quantity < 10) return { text: 'Low Stock', class: 'warning' };
-    return { text: 'In Stock', class: 'success' };
+    if (quantity <= 0) return { text: 'Out of Stock', class: 'danger', bg: 'bg-danger' };
+    if (quantity < 10) return { text: 'Low Stock', class: 'warning', bg: 'bg-warning' };
+    return { text: 'In Stock', class: 'success', bg: 'bg-success' };
   };
 
   const getStockPercentage = (quantity) => {
@@ -246,75 +244,86 @@ function Home() {
     return Math.min((quantity / max) * 100, 100);
   };
 
-  // Show loading only for products, not for business data
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "100vh" }}>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
         <div className="text-center">
-          <div className="spinner-border text-primary mb-3" style={{ width: "2.5rem", height: "2.5rem" }} role="status">
-            <span className="visually-hidden">Loading...</span>
+          <div className="relative">
+            <div className="w-20 h-20 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin"></div>
           </div>
-          <p className="text-muted">Loading amazing products...</p>
+          <p className="mt-4 text-gray-600 font-medium">Loading amazing products...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="home-page">
-      {/* Hero Section */}
-      <section className="hero-section">
-        <div className="container">
-          <div className="row align-items-center">
-            <div className="col-lg-5 mb-3 mb-lg-0">
-              <div className="hero-content">
-                <h1 className="hero-title">{businessData.businessName}</h1>
-                <p className="hero-subtitle">{businessData.tagline}</p>
-                <div className="d-flex gap-2 flex-wrap">
-                  <span className="badge bg-dark text-white py-2 px-3 rounded-pill">
-                    <i className="bi bi-shop me-2"></i>
-                    Showroom Only
-                  </span>
-                  <span className="badge bg-dark text-white py-2 px-3 rounded-pill">
-                    <i className="bi bi-clock me-2"></i>
-                    {formatTime(businessData.businessHours?.monday?.open)} - {formatTime(businessData.businessHours?.monday?.close)}
-                  </span>
-                </div>
+    <div className="bg-gray-50">
+      {/* Hero Section with Gradient */}
+      <section className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white">
+        <div className="container mx-auto px-4 py-16 md:py-20">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left Content */}
+            <div className="space-y-6">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
+                {businessData.businessName}
+              </h1>
+              <p className="text-xl text-blue-100 max-w-lg">
+                {businessData.tagline}
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <span className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-medium border border-white/20">
+                  <i className="bi bi-shop"></i>
+                  Showroom Only
+                </span>
+                <span className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-medium border border-white/20">
+                  <i className="bi bi-clock"></i>
+                  {formatTime(businessData.businessHours?.monday?.open)} - {formatTime(businessData.businessHours?.monday?.close)}
+                </span>
               </div>
             </div>
-            <div className="col-lg-7">
+
+            {/* Right Content - Horizontal Scrolling Cards */}
+            <div className="relative">
               <div 
                 ref={scrollContainerRef}
-                className="scroll-container"
+                className="flex overflow-x-auto gap-4 pb-4 scrollbar-hide"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
                 {products.length > 0 ? (
                   products.concat(products).map((product, index) => (
-                    <Link to={`/product/${product._id}`} key={`${product._id}-${index}`} style={{ textDecoration: 'none' }}>
-                      <div className="hero-product-card">
-                        <div className="hero-product-image">
+                    <Link 
+                      to={`/product/${product._id}`} 
+                      key={`${product._id}-${index}`} 
+                      className="flex-none w-64 group"
+                    >
+                      <div className="bg-white rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
+                        <div className="h-48 overflow-hidden">
                           <img
-                            src={product.image || "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=300&auto=format"}
+                            src={product.image || "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=400&auto=format"}
                             alt={product.name}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                             onError={(e) => {
-                              e.target.src = "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=300&auto=format";
+                              e.target.src = "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=400&auto=format";
                             }}
                           />
                         </div>
-                        <div className="hero-product-info">
-                          <div className="hero-product-name">{product.name}</div>
-                          <div className="hero-product-price">₹{product.sellingRate}</div>
+                        <div className="p-4">
+                          <h3 className="font-semibold text-gray-800 mb-1 truncate">{product.name}</h3>
+                          <p className="text-xl font-bold text-blue-600">₹{product.sellingRate}</p>
                         </div>
                       </div>
                     </Link>
                   ))
                 ) : (
-                  <div className="text-center py-4">
-                    <p className="text-muted">No products available</p>
+                  <div className="text-center py-8">
+                    <p className="text-white">No products available</p>
                   </div>
                 )}
               </div>
-              <div className="text-end mt-2">
-                <Link to="/products" className="text-dark text-decoration-none small">
+              <div className="absolute top-0 right-0 bottom-0 w-24 bg-gradient-to-l from-blue-700 to-transparent pointer-events-none"></div>
+              <div className="mt-4 text-right">
+                <Link to="/products" className="inline-flex items-center gap-2 text-white hover:text-blue-200 transition-colors">
                   View All Products <i className="bi bi-arrow-right"></i>
                 </Link>
               </div>
@@ -323,131 +332,149 @@ function Home() {
         </div>
       </section>
 
-      <div className="container">
-        {/* Categories */}
-        <section>
-          <h2 className="fs-4 fw-semibold mb-3">Shop by Category</h2>
-          <div className="category-grid">
+      <div className="container mx-auto px-4 py-12">
+        {/* Categories Section */}
+        <section className="mb-16">
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-3xl font-bold text-gray-800">Shop by Category</h2>
+            <Link to="/products" className="text-blue-600 hover:text-blue-700 font-medium inline-flex items-center gap-2">
+              View All <i className="bi bi-arrow-right"></i>
+            </Link>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {categories.map((category) => (
               <div 
                 key={category.id}
-                className="category-card"
+                className="group cursor-pointer"
                 onClick={() => setSelectedCategory(category.name)}
               >
-                <div className="category-icon" style={{ background: category.color }}>
-                  <i className={`bi ${category.icon}`}></i>
+                <div 
+                  className="bg-white rounded-2xl p-6 text-center shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-100"
+                  style={{ backgroundColor: category.lightColor }}
+                >
+                  <div 
+                    className="w-16 h-16 rounded-full mx-auto mb-3 flex items-center justify-center transition-transform group-hover:scale-110"
+                    style={{ backgroundColor: category.color }}
+                  >
+                    <i className={`bi ${category.icon} text-white text-2xl`}></i>
+                  </div>
+                  <h3 className="font-semibold text-gray-800 mb-1">{category.name}</h3>
+                  <p className="text-xs text-gray-500">New styles</p>
                 </div>
-                <div className="category-name">{category.name}</div>
-                <div className="category-count">New styles</div>
               </div>
             ))}
           </div>
         </section>
 
-        {/* Stats */}
-        <section className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-icon blue">
-              <i className="bi bi-box-seam"></i>
+        {/* Stats Section */}
+        <section className="mb-16">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-lg">
+              <div className="flex items-center gap-4">
+                <div className="bg-white/20 rounded-xl p-3">
+                  <i className="bi bi-box-seam text-3xl"></i>
+                </div>
+                <div>
+                  <p className="text-blue-100 text-sm">Total Items</p>
+                  <p className="text-3xl font-bold">{products.reduce((sum, p) => sum + p.quantity, 0)}</p>
+                </div>
+              </div>
             </div>
-            <div className="stat-info">
-              <h3>{products.reduce((sum, p) => sum + p.quantity, 0)}</h3>
-              <p>Total Items</p>
+
+            <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white shadow-lg">
+              <div className="flex items-center gap-4">
+                <div className="bg-white/20 rounded-xl p-3">
+                  <i className="bi bi-tags text-3xl"></i>
+                </div>
+                <div>
+                  <p className="text-green-100 text-sm">Products</p>
+                  <p className="text-3xl font-bold">{products.length}</p>
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon green">
-              <i className="bi bi-tags"></i>
-            </div>
-            <div className="stat-info">
-              <h3>{products.length}</h3>
-              <p>Products</p>
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon yellow">
-              <i className="bi bi-exclamation-triangle"></i>
-            </div>
-            <div className="stat-info">
-              <h3>{products.filter(p => p.quantity > 0 && p.quantity < 10).length}</h3>
-              <p>Low Stock</p>
+
+            <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-6 text-white shadow-lg">
+              <div className="flex items-center gap-4">
+                <div className="bg-white/20 rounded-xl p-3">
+                  <i className="bi bi-exclamation-triangle text-3xl"></i>
+                </div>
+                <div>
+                  <p className="text-orange-100 text-sm">Low Stock</p>
+                  <p className="text-3xl font-bold">{products.filter(p => p.quantity > 0 && p.quantity < 10).length}</p>
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* Products */}
-        <section>
-          <div className="d-flex justify-content-between align-items-center mb-3">
-            <h2 className="fs-4 fw-semibold mb-0">Featured Products</h2>
-            <Link to="/products" className="text-primary text-decoration-none small">
+        {/* Featured Products */}
+        <section className="mb-16">
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-3xl font-bold text-gray-800">Featured Products</h2>
+            <Link to="/products" className="text-blue-600 hover:text-blue-700 font-medium inline-flex items-center gap-2">
               View All <i className="bi bi-arrow-right"></i>
             </Link>
           </div>
 
           {displayedProducts.length > 0 ? (
             <>
-              <div className="products-grid">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {displayedProducts.slice(0, 4).map((product) => {
                   const stockStatus = getStockStatus(product.quantity);
                   const isLatest = latestProduct && product._id === latestProduct._id;
                   
                   return (
-                    <Link to={`/product/${product._id}`} key={product._id} style={{ textDecoration: 'none' }}>
-                      <div className="product-card">
-                        <div className="product-image">
+                    <Link to={`/product/${product._id}`} key={product._id} className="group">
+                      <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                        <div className="relative h-64 overflow-hidden">
                           <img
                             src={product.image || "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=400&auto=format"}
                             alt={product.name}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                             onError={(e) => {
                               e.target.src = "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=400&auto=format";
                             }}
                           />
                           {isLatest && (
-                            <span className="product-badge">
-                              <i className="bi bi-stars me-1"></i>
+                            <span className="absolute top-4 right-4 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg">
+                              <i className="bi bi-stars mr-1"></i>
                               New
                             </span>
                           )}
                         </div>
                         
-                        <div className="product-info">
-                          <h3 className="product-name">{product.name}</h3>
+                        <div className="p-5">
+                          <h3 className="font-semibold text-gray-800 mb-2">{product.name}</h3>
                           
-                          <div className="product-tags">
-                            <span className="product-tag">
-                              <i className="bi bi-rulers me-1"></i>
+                          <div className="flex flex-wrap gap-2 mb-3">
+                            <span className="bg-gray-100 px-2 py-1 rounded-md text-xs text-gray-600">
                               {product.size}
                             </span>
-                            <span className="product-tag">
-                              <span className="color-dot" style={{ 
-                                backgroundColor: product.color.code, 
-                                display: 'inline-block', 
-                                width: '10px', 
-                                height: '10px', 
-                                borderRadius: '50%', 
-                                marginRight: '4px' 
-                              }}></span>
+                            <span className="bg-gray-100 px-2 py-1 rounded-md text-xs text-gray-600 flex items-center gap-1">
+                              <span className="w-3 h-3 rounded-full" style={{ backgroundColor: product.color.code }}></span>
                               {product.color.name}
                             </span>
-                            <span className="product-tag">
-                              <i className="bi bi-tag me-1"></i>
+                            <span className="bg-gray-100 px-2 py-1 rounded-md text-xs text-gray-600">
                               {product.fabric}
                             </span>
                           </div>
 
-                          <div className="product-price">
-                            <span className="price">₹{product.sellingRate}</span>
-                            <span className="stock">{product.quantity} units</span>
+                          <div className="flex justify-between items-center mb-3">
+                            <span className="text-2xl font-bold text-blue-600">₹{product.sellingRate}</span>
+                            <span className={`text-sm ${stockStatus.class === 'success' ? 'text-green-600' : stockStatus.class === 'warning' ? 'text-orange-600' : 'text-red-600'}`}>
+                              {product.quantity} units
+                            </span>
                           </div>
 
-                          <div className="stock-bar">
+                          <div className="w-full bg-gray-200 rounded-full h-1.5 mb-4">
                             <div 
-                              className="stock-fill" 
+                              className={`h-1.5 rounded-full ${stockStatus.bg}`}
                               style={{ width: `${getStockPercentage(product.quantity)}%` }}
                             ></div>
                           </div>
 
-                          <span className="view-link">
+                          <span className="inline-flex items-center gap-1 text-blue-600 group-hover:gap-2 transition-all">
                             View Details <i className="bi bi-arrow-right"></i>
                           </span>
                         </div>
@@ -457,127 +484,133 @@ function Home() {
                 })}
               </div>
 
-              <div className="text-center mt-3">
-                <Link to="/products" className="btn btn-outline-primary btn-sm px-4">
-                  Browse All Products <i className="bi bi-arrow-right ms-2"></i>
+              <div className="text-center mt-8">
+                <Link 
+                  to="/products" 
+                  className="inline-flex items-center gap-2 bg-white border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-8 py-3 rounded-full font-semibold transition-all duration-300"
+                >
+                  Browse All Products <i className="bi bi-arrow-right"></i>
                 </Link>
               </div>
             </>
           ) : (
-            <div className="text-center py-5 bg-white rounded border">
-              <i className="bi bi-emoji-frown display-4 text-muted"></i>
-              <p className="text-muted mt-2">No products found</p>
+            <div className="text-center py-12 bg-white rounded-2xl shadow-sm">
+              <i className="bi bi-emoji-frown text-5xl text-gray-400"></i>
+              <p className="text-gray-500 mt-3">No products found</p>
             </div>
           )}
         </section>
 
-        {/* Business Info */}
-        <section className="business-card">
-          <div className="row">
-            <div className="col-md-6">
-              <h3 className="fs-5 fw-semibold mb-3">Store Information</h3>
-              <div className="info-grid">
-                <div className="info-item">
-                  <div className="info-icon">
-                    <i className="bi bi-geo-alt"></i>
+        {/* Business Info Card */}
+        <section className="mb-12">
+          <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl overflow-hidden shadow-xl">
+            <div className="grid md:grid-cols-2">
+              {/* Store Information */}
+              <div className="p-8 text-white">
+                <h3 className="text-2xl font-bold mb-6">Store Information</h3>
+                <div className="space-y-4">
+                  <div className="flex gap-3">
+                    <div className="bg-white/10 rounded-lg p-2 h-fit">
+                      <i className="bi bi-geo-alt text-blue-400"></i>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-400">Address</p>
+                      <p className="font-medium">{businessData.address?.fullAddress}</p>
+                    </div>
                   </div>
-                  <div className="info-content">
-                    <h4>Address</h4>
-                    <p>{businessData.address?.fullAddress}</p>
+                  
+                  <div className="flex gap-3">
+                    <div className="bg-white/10 rounded-lg p-2 h-fit">
+                      <i className="bi bi-telephone text-blue-400"></i>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-400">Phone</p>
+                      {primaryPhone && (
+                        <a href={`tel:${primaryPhone.number}`} className="font-medium hover:text-blue-400 transition-colors">
+                          {primaryPhone.number}
+                        </a>
+                      )}
+                    </div>
                   </div>
-                </div>
-                
-                <div className="info-item">
-                  <div className="info-icon">
-                    <i className="bi bi-telephone"></i>
-                  </div>
-                  <div className="info-content">
-                    <h4>Phone</h4>
-                    {primaryPhone && (
-                      <p><a href={`tel:${primaryPhone.number}`}>{primaryPhone.number}</a></p>
-                    )}
-                  </div>
-                </div>
 
-                <div className="info-item">
-                  <div className="info-icon">
-                    <i className="bi bi-envelope"></i>
-                  </div>
-                  <div className="info-content">
-                    <h4>Email</h4>
-                    {primaryEmail && (
-                      <p><a href={`mailto:${primaryEmail.email}`}>{primaryEmail.email}</a></p>
-                    )}
+                  <div className="flex gap-3">
+                    <div className="bg-white/10 rounded-lg p-2 h-fit">
+                      <i className="bi bi-envelope text-blue-400"></i>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-400">Email</p>
+                      {primaryEmail && (
+                        <a href={`mailto:${primaryEmail.email}`} className="font-medium hover:text-blue-400 transition-colors">
+                          {primaryEmail.email}
+                        </a>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div className="col-md-6">
-              <h3 className="fs-5 fw-semibold mb-3">Store Hours</h3>
-              <div className="hours-list">
-                {Object.entries(businessData.businessHours).map(([day, hours]) => (
-                  <div key={day} className="hour-item">
-                    <span className="hour-day text-capitalize">{day}</span>
-                    <span className="hour-time">
-                      {hours.closed ? 'Closed' : `${formatTime(hours.open)} - ${formatTime(hours.close)}`}
-                    </span>
-                  </div>
-                ))}
+              {/* Store Hours */}
+              <div className="bg-white/5 p-8 text-white">
+                <h3 className="text-2xl font-bold mb-6">Store Hours</h3>
+                <div className="space-y-3">
+                  {Object.entries(businessData.businessHours).map(([day, hours]) => (
+                    <div key={day} className="flex justify-between items-center border-b border-white/10 pb-2 last:border-0">
+                      <span className="capitalize font-medium">{day}</span>
+                      <span className="text-gray-300">
+                        {hours.closed ? 'Closed' : `${formatTime(hours.open)} - ${formatTime(hours.close)}`}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <hr className="my-6 border-white/10" />
+                <p className="text-sm text-gray-400 flex items-start gap-2">
+                  <i className="bi bi-info-circle text-blue-400 mt-1"></i>
+                  Visit our showroom to try and purchase items
+                </p>
               </div>
-              <hr className="my-3" />
-              <p className="small text-muted mb-0">
-                <i className="bi bi-info-circle me-2"></i>
-                Visit our showroom to try and purchase items
-              </p>
             </div>
           </div>
         </section>
 
-        {/* Features */}
-        <section className="row g-3 py-4">
-          <div className="col-6 col-md-3">
-            <div className="text-center">
-              <div className="bg-primary bg-opacity-10 text-primary rounded-circle d-inline-flex p-2 mb-2">
-                <i className="bi bi-shop fs-5"></i>
-              </div>
-              <h6 className="fs-7 fw-semibold">Showroom Only</h6>
-              <small className="text-muted d-block">Try before buy</small>
+        {/* Features Grid */}
+        <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-white rounded-xl p-4 text-center shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-blue-50 w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center">
+              <i className="bi bi-shop text-blue-600 text-xl"></i>
             </div>
+            <h6 className="font-semibold text-gray-800">Showroom Only</h6>
+            <p className="text-xs text-gray-500 mt-1">Try before buy</p>
           </div>
-          <div className="col-6 col-md-3">
-            <div className="text-center">
-              <div className="bg-primary bg-opacity-10 text-primary rounded-circle d-inline-flex p-2 mb-2">
-                <i className="bi bi-rulers fs-5"></i>
-              </div>
-              <h6 className="fs-7 fw-semibold">Free Fitting</h6>
-              <small className="text-muted d-block">In-store trials</small>
+
+          <div className="bg-white rounded-xl p-4 text-center shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-green-50 w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center">
+              <i className="bi bi-rulers text-green-600 text-xl"></i>
             </div>
+            <h6 className="font-semibold text-gray-800">Free Fitting</h6>
+            <p className="text-xs text-gray-500 mt-1">In-store trials</p>
           </div>
-          <div className="col-6 col-md-3">
-            <div className="text-center">
-              <div className="bg-primary bg-opacity-10 text-primary rounded-circle d-inline-flex p-2 mb-2">
-                <i className="bi bi-award fs-5"></i>
-              </div>
-              <h6 className="fs-7 fw-semibold">Premium Quality</h6>
-              <small className="text-muted d-block">100% genuine</small>
+
+          <div className="bg-white rounded-xl p-4 text-center shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-purple-50 w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center">
+              <i className="bi bi-award text-purple-600 text-xl"></i>
             </div>
+            <h6 className="font-semibold text-gray-800">Premium Quality</h6>
+            <p className="text-xs text-gray-500 mt-1">100% genuine</p>
           </div>
-          <div className="col-6 col-md-3">
-            <div className="text-center">
-              <div className="bg-primary bg-opacity-10 text-primary rounded-circle d-inline-flex p-2 mb-2">
-                <i className="bi bi-person-badge fs-5"></i>
-              </div>
-              <h6 className="fs-7 fw-semibold">Expert Staff</h6>
-              <small className="text-muted d-block">Fashion consultants</small>
+
+          <div className="bg-white rounded-xl p-4 text-center shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-orange-50 w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center">
+              <i className="bi bi-person-badge text-orange-600 text-xl"></i>
             </div>
+            <h6 className="font-semibold text-gray-800">Expert Staff</h6>
+            <p className="text-xs text-gray-500 mt-1">Fashion consultants</p>
           </div>
         </section>
       </div>
 
-      {/* Back to Top */}
+      {/* Back to Top Button */}
       <button 
-        className={`back-to-top ${!showBackToTop ? 'hidden' : ''}`}
+        className={`fixed bottom-8 right-8 w-12 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:shadow-xl ${!showBackToTop ? 'opacity-0 invisible' : 'opacity-100 visible'}`}
         onClick={scrollToTop}
         aria-label="Back to top"
       >
