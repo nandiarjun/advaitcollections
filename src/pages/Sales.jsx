@@ -35,10 +35,18 @@ function Sales() {
         window.location.href = '/admin-login';
         return;
       }
-      const data = await salesAPI.getSalesHistory(token);
-      setRecentSales(data.slice(0, 5));
+      const data = await salesAPI.getSalesHistory();
+      console.log("Recent sales data:", data); // Debug log
+      
+      // Ensure data is an array and sort by date (newest first)
+      const salesArray = Array.isArray(data) ? data : [];
+      const sortedSales = salesArray.sort((a, b) => 
+        new Date(b.createdAt) - new Date(a.createdAt)
+      );
+      setRecentSales(sortedSales.slice(0, 10)); // Get last 10 sales
     } catch (error) {
       console.error("Error fetching recent sales:", error);
+      setRecentSales([]);
     }
   };
 
@@ -96,9 +104,9 @@ function Sales() {
         saleData.customSellingPrice = Number(customSellingPrice);
       }
 
-      const res = await salesAPI.sellProduct(saleData, token);
+      const res = await salesAPI.sellProduct(saleData);
 
-      setSuccess(`✅ Sale Completed Successfully! Remaining Stock: ${res.remainingStock}`);
+      setSuccess(`✅ Sale Completed Successfully! Remaining Stock: ${res.remainingStock || 0}`);
 
       // Reset form
       setQuantitySold("");
@@ -106,14 +114,15 @@ function Sales() {
       setSelectedProduct("");
       setSelectedProductDetails(null);
       
-      // Refresh data
+      // Refresh both products and recent sales
       await Promise.all([fetchProducts(), fetchRecentSales()]);
 
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(null), 3000);
+      // Clear success message after 5 seconds
+      setTimeout(() => setSuccess(null), 5000);
 
     } catch (error) {
-      setError(error.message || "Sale Failed");
+      console.error("Sale error:", error);
+      setError(error.message || "Sale Failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -123,18 +132,25 @@ function Sales() {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
-      minimumFractionDigits: 2
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
     }).format(amount || 0);
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    if (!dateString) return 'N/A';
+    try {
+      return new Date(dateString).toLocaleString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    } catch (e) {
+      return 'Invalid Date';
+    }
   };
 
   const calculateExpectedProfit = () => {
@@ -142,6 +158,11 @@ function Sales() {
     const sellingPrice = Number(customSellingPrice || selectedProductDetails.sellingRate);
     const purchasePrice = selectedProductDetails.purchaseRate;
     return (sellingPrice - purchasePrice) * Number(quantitySold);
+  };
+
+  const calculateMargin = (profit, saleValue) => {
+    if (!saleValue || saleValue === 0) return '0.0';
+    return ((profit / saleValue) * 100).toFixed(1);
   };
 
   const inStockProducts = products.filter(p => p.quantity > 0);
@@ -359,35 +380,38 @@ function Sales() {
               <div className="list-group list-group-flush" style={{ maxHeight: "600px", overflowY: "auto" }}>
                 {recentSales.length > 0 ? (
                   recentSales.map((sale, index) => (
-                    <div key={index} className="list-group-item border-0 border-bottom">
+                    <div key={sale._id || index} className="list-group-item border-0 border-bottom">
                       <div className="d-flex justify-content-between align-items-start mb-2">
                         <div>
                           <h6 className="fw-semibold mb-1">
-                            {sale.productId?.name || 'Unknown Product'}
+                            {sale.productId?.name || sale.productName || 'Unknown Product'}
                           </h6>
                           <small className="text-muted d-block">
                             <i className="bi bi-clock me-1"></i>
                             {formatDate(sale.createdAt)}
                           </small>
+                          <small className="text-muted d-block">
+                            <i className="bi bi-upc-scan me-1"></i>
+                            Qty: {sale.quantitySold || 0}
+                          </small>
                         </div>
-                        <span className={`badge ${sale.profit >= 0 ? 'bg-success' : 'bg-danger'}`}>
-                          {sale.profit >= 0 ? '+' : ''}{formatCurrency(sale.profit)}
-                        </span>
+                        <div className="text-end">
+                          <span className={`badge ${sale.profit >= 0 ? 'bg-success' : 'bg-danger'} mb-1`}>
+                            {sale.profit >= 0 ? '+' : ''}{formatCurrency(sale.profit)}
+                          </span>
+                          <div className="small text-muted">
+                            Margin: {calculateMargin(sale.profit, sale.totalSaleValue)}%
+                          </div>
+                        </div>
                       </div>
-                      <div className="d-flex justify-content-between align-items-center small">
-                        <div>
-                          <span className="text-muted">Qty:</span>
-                          <strong className="ms-1">{sale.quantitySold}</strong>
-                        </div>
+                      <div className="d-flex justify-content-between align-items-center small bg-light p-2 rounded">
                         <div>
                           <span className="text-muted">Amount:</span>
                           <strong className="ms-1 text-primary">{formatCurrency(sale.totalSaleValue)}</strong>
                         </div>
                         <div>
-                          <span className="text-muted">Margin:</span>
-                          <strong className={`ms-1 ${sale.profit >= 0 ? 'text-success' : 'text-danger'}`}>
-                            {((sale.profit / sale.totalSaleValue) * 100).toFixed(1)}%
-                          </strong>
+                          <span className="text-muted">Purchase:</span>
+                          <strong className="ms-1 text-danger">{formatCurrency(sale.totalPurchaseValue)}</strong>
                         </div>
                       </div>
                     </div>
@@ -395,8 +419,15 @@ function Sales() {
                 ) : (
                   <div className="text-center py-5">
                     <i className="bi bi-inbox fs-1 text-muted"></i>
-                    <p className="text-muted mt-2">No sales yet</p>
-                    <p className="text-muted small">Complete your first sale to see it here</p>
+                    <p className="text-muted mt-3 fw-semibold">No Sales Yet</p>
+                    <p className="text-muted small mb-3">Complete your first sale to see it here</p>
+                    <button 
+                      className="btn btn-outline-primary btn-sm"
+                      onClick={fetchRecentSales}
+                    >
+                      <i className="bi bi-arrow-repeat me-2"></i>
+                      Refresh
+                    </button>
                   </div>
                 )}
               </div>
