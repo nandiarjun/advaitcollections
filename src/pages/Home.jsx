@@ -1,10 +1,11 @@
 import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
-import { productsAPI } from "../services/api";
+import { productsAPI, settingsAPI } from "../services/api";
 
 function Home() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [businessLoading, setBusinessLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedSize, setSelectedSize] = useState("all");
   const [selectedColor, setSelectedColor] = useState("all");
@@ -14,8 +15,8 @@ function Home() {
   const [latestProduct, setLatestProduct] = useState(null);
   const [visibleProducts, setVisibleProducts] = useState(8);
 
-  // Static business data (since settings API is protected)
-  const businessData = {
+  // Dynamic business data (fetched from API)
+  const [businessData, setBusinessData] = useState({
     businessName: "Advait Collections",
     tagline: "Premium Garments & Fashion Accessories",
     address: {
@@ -36,7 +37,7 @@ function Home() {
       saturday: { open: "10:00", close: "21:00", closed: false },
       sunday: { open: "11:00", close: "19:00", closed: false }
     }
-  };
+  });
 
   const scrollContainerRef = useRef(null);
 
@@ -67,6 +68,7 @@ function Home() {
 
   useEffect(() => {
     fetchProducts();
+    fetchBusinessData();
     
     const handleScroll = () => {
       setShowBackToTop(window.scrollY > 500);
@@ -106,6 +108,36 @@ function Home() {
 
     return () => clearInterval(scrollInterval);
   }, [products]);
+
+  const fetchBusinessData = async () => {
+    try {
+      setBusinessLoading(true);
+      const response = await settingsAPI.getSettings();
+      
+      if (response.success && response.settings) {
+        const settings = response.settings;
+        setBusinessData({
+          businessName: settings.businessName || "Advait Collections",
+          tagline: settings.tagline || "Premium Garments & Fashion Accessories",
+          description: settings.description || "",
+          logo: settings.logo || { url: "", publicId: "" },
+          address: {
+            fullAddress: settings.address?.fullAddress || 
+              `${settings.address?.street || '123 Fashion Street'}, ${settings.address?.city || 'Andheri West'}, ${settings.address?.state || 'Mumbai'} - ${settings.address?.pincode || '400053'}`
+          },
+          phoneNumbers: settings.phoneNumbers?.length > 0 ? settings.phoneNumbers : businessData.phoneNumbers,
+          emails: settings.emails?.length > 0 ? settings.emails : businessData.emails,
+          socialMedia: settings.socialMedia || {},
+          businessHours: settings.businessHours || businessData.businessHours
+        });
+      }
+    } catch (error) {
+      // Silently use default data - no console errors
+      console.log("Using default business data");
+    } finally {
+      setBusinessLoading(false);
+    }
+  };
 
   const fetchProducts = async () => {
     try {
@@ -214,6 +246,7 @@ function Home() {
     return Math.min((quantity / max) * 100, 100);
   };
 
+  // Show loading only for products, not for business data
   if (loading) {
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "100vh" }}>
