@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
-import { productsAPI, salesAPI } from "../services/api";
+import { productsAPI } from "../services/api";
+import "./AdminDashboard.css";
 
 function AdminDashboard() {
   const [summary, setSummary] = useState({
@@ -21,7 +22,6 @@ function AdminDashboard() {
   const [dateRange, setDateRange] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [sortConfig, setSortConfig] = useState({ key: 'productName', direction: 'asc' });
-  const [recentSales, setRecentSales] = useState([]);
 
   useEffect(() => {
     fetchData();
@@ -41,8 +41,7 @@ function AdminDashboard() {
     try {
       await Promise.all([
         fetchSummary(),
-        fetchReport(),
-        fetchRecentSales()
+        fetchReport()
       ]);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -67,22 +66,11 @@ function AdminDashboard() {
 
   const fetchReport = async () => {
     try {
-      // Try to get product report, fallback to empty array if not available
       const data = await productsAPI.getProductReport();
       setReport(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Report fetch error:", error);
       setReport([]);
-    }
-  };
-
-  const fetchRecentSales = async () => {
-    try {
-      const data = await salesAPI.getRecentSales(5);
-      setRecentSales(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error("Recent sales fetch error:", error);
-      setRecentSales([]);
     }
   };
 
@@ -110,7 +98,6 @@ function AdminDashboard() {
     const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();
 
-    // Set column widths
     const colWidths = [
       { wch: 30 }, { wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 15 },
       { wch: 15 }, { wch: 15 }, { wch: 20 }, { wch: 20 }, { wch: 15 }, { wch: 15 }
@@ -186,7 +173,6 @@ function AdminDashboard() {
       let aVal = a[sortConfig.key];
       let bVal = b[sortConfig.key];
       
-      // Handle undefined values
       aVal = aVal !== undefined ? aVal : '';
       bVal = bVal !== undefined ? bVal : '';
       
@@ -237,64 +223,64 @@ function AdminDashboard() {
   };
 
   const getSortIcon = (key) => {
-    if (sortConfig.key !== key) return <i className="bi bi-arrow-down-up ms-1 text-muted"></i>;
+    if (sortConfig.key !== key) return <i className="bi bi-arrow-down-up adm-dash-sort-icon"></i>;
     return sortConfig.direction === 'asc' 
-      ? <i className="bi bi-arrow-up ms-1"></i>
-      : <i className="bi bi-arrow-down ms-1"></i>;
+      ? <i className="bi bi-arrow-up adm-dash-sort-icon"></i>
+      : <i className="bi bi-arrow-down adm-dash-sort-icon"></i>;
   };
 
   if (loading) {
     return (
-      <div className="container-fluid py-5 text-center">
-        <div className="spinner-border text-primary mb-3" style={{ width: '3rem', height: '3rem' }} role="status">
-          <span className="visually-hidden">Loading...</span>
+      <div className="adm-dash-loading">
+        <div className="adm-dash-loading-content">
+          <div className="adm-dash-spinner"></div>
+          <p className="text-muted">Loading dashboard data...</p>
         </div>
-        <p className="text-muted">Loading dashboard data...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="container-fluid py-5 text-center">
-        <div className="mb-4">
-          <i className="bi bi-exclamation-triangle display-1 text-danger"></i>
-        </div>
-        <h4 className="mt-3">Oops! Something went wrong</h4>
-        <p className="text-muted mb-4">{error}</p>
-        <div className="d-flex justify-content-center gap-3">
-          <button className="btn btn-primary" onClick={fetchData}>
-            <i className="bi bi-arrow-repeat me-2"></i>
-            Retry
-          </button>
-          <Link to="/admin-login" className="btn btn-outline-secondary">
-            <i className="bi bi-box-arrow-in-right me-2"></i>
-            Login Again
-          </Link>
+      <div className="adm-dash-error">
+        <div className="adm-dash-error-content">
+          <div className="adm-dash-error-icon">
+            <i className="bi bi-exclamation-triangle-fill"></i>
+          </div>
+          <h4 className="adm-dash-error-title">Oops! Something went wrong</h4>
+          <p className="adm-dash-error-message">{error}</p>
+          <div className="adm-dash-error-actions">
+            <button className="adm-dash-btn adm-dash-btn-primary" onClick={fetchData}>
+              <i className="bi bi-arrow-repeat me-2"></i>
+              Retry
+            </button>
+            <Link to="/admin-login" className="adm-dash-btn adm-dash-btn-outline">
+              <i className="bi bi-box-arrow-in-right me-2"></i>
+              Login Again
+            </Link>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container-fluid py-4">
+    <div className="adm-dash-container">
       {/* Header */}
-      <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-        <div>
-          <h4 className="fw-bold mb-1">
-            <i className="bi bi-speedometer2 me-2 text-primary"></i>
+      <div className="adm-dash-header">
+        <div className="adm-dash-title-section">
+          <h1>
+            <i className="bi bi-speedometer2"></i>
             Admin Dashboard
-          </h4>
-          <p className="text-muted small mb-0">
-            Welcome back! Here's what's happening with your store today.
-          </p>
+          </h1>
+          <p>Welcome back! Here's what's happening with your store today.</p>
         </div>
-        <div className="d-flex gap-2">
-          <button className="btn btn-outline-primary btn-sm" onClick={fetchData}>
+        <div className="adm-dash-actions">
+          <button className="adm-dash-btn adm-dash-btn-outline" onClick={fetchData}>
             <i className="bi bi-arrow-repeat me-2"></i>
             Refresh
           </button>
-          <Link to="/admin/sales/new" className="btn btn-primary btn-sm">
+          <Link to="/admin/sales/new" className="adm-dash-btn adm-dash-btn-primary">
             <i className="bi bi-cart-plus me-2"></i>
             New Sale
           </Link>
@@ -302,216 +288,142 @@ function AdminDashboard() {
       </div>
 
       {/* Summary Cards */}
-      <div className="row g-3 mb-4">
-        <div className="col-md-3">
-          <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
-              <div className="d-flex align-items-center">
-                <div className="flex-shrink-0">
-                  <div className="bg-primary bg-opacity-10 p-3 rounded">
-                    <i className="bi bi-box-seam fs-4 text-primary"></i>
-                  </div>
-                </div>
-                <div className="flex-grow-1 ms-3">
-                  <h6 className="text-muted mb-1">Total Products</h6>
-                  <h4 className="mb-0 fw-bold">{summary.totalProducts || 0}</h4>
-                  <small className="text-muted">Unique items</small>
-                </div>
+      <div className="adm-dash-stats-grid">
+        <div className="adm-dash-stat-card">
+          <div className="adm-dash-stat-content">
+            <div className="adm-dash-stat-icon primary">
+              <i className="bi bi-box-seam"></i>
+            </div>
+            <div className="adm-dash-stat-info">
+              <div className="adm-dash-stat-label">Total Products</div>
+              <div className="adm-dash-stat-value">{summary.totalProducts || 0}</div>
+              <div className="adm-dash-stat-sub">
+                <i className="bi bi-tag"></i>
+                Unique items
               </div>
             </div>
           </div>
         </div>
 
-        <div className="col-md-3">
-          <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
-              <div className="d-flex align-items-center">
-                <div className="flex-shrink-0">
-                  <div className="bg-success bg-opacity-10 p-3 rounded">
-                    <i className="bi bi-boxes fs-4 text-success"></i>
-                  </div>
-                </div>
-                <div className="flex-grow-1 ms-3">
-                  <h6 className="text-muted mb-1">Total Stock</h6>
-                  <h4 className="mb-0 fw-bold">{summary.totalStock || 0}</h4>
-                  <small className="text-muted">Units available</small>
-                </div>
+        <div className="adm-dash-stat-card">
+          <div className="adm-dash-stat-content">
+            <div className="adm-dash-stat-icon success">
+              <i className="bi bi-boxes"></i>
+            </div>
+            <div className="adm-dash-stat-info">
+              <div className="adm-dash-stat-label">Total Stock</div>
+              <div className="adm-dash-stat-value">{summary.totalStock || 0}</div>
+              <div className="adm-dash-stat-sub">
+                <i className="bi bi-cube"></i>
+                Units available
               </div>
             </div>
           </div>
         </div>
 
-        <div className="col-md-3">
-          <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
-              <div className="d-flex align-items-center">
-                <div className="flex-shrink-0">
-                  <div className="bg-info bg-opacity-10 p-3 rounded">
-                    <i className="bi bi-graph-up fs-4 text-info"></i>
-                  </div>
-                </div>
-                <div className="flex-grow-1 ms-3">
-                  <h6 className="text-muted mb-1">Total Sales</h6>
-                  <h4 className="mb-0 fw-bold text-info">{formatCurrency(summary.totalSaleValue)}</h4>
-                  <small className="text-muted">Today: {formatCurrency(summary.todaySaleValue)}</small>
-                </div>
+        <div className="adm-dash-stat-card">
+          <div className="adm-dash-stat-content">
+            <div className="adm-dash-stat-icon info">
+              <i className="bi bi-graph-up"></i>
+            </div>
+            <div className="adm-dash-stat-info">
+              <div className="adm-dash-stat-label">Total Sales</div>
+              <div className="adm-dash-stat-value">{formatCurrency(summary.totalSaleValue)}</div>
+              <div className="adm-dash-stat-sub">
+                <i className="bi bi-calendar"></i>
+                Today: {formatCurrency(summary.todaySaleValue)}
               </div>
             </div>
           </div>
         </div>
 
-        <div className="col-md-3">
-          <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
-              <div className="d-flex align-items-center">
-                <div className="flex-shrink-0">
-                  <div className={`bg-opacity-10 p-3 rounded ${(summary.totalProfit || 0) >= 0 ? 'bg-success' : 'bg-danger'}`}>
-                    <i className={`bi bi-cash-stack fs-4 ${(summary.totalProfit || 0) >= 0 ? 'text-success' : 'text-danger'}`}></i>
-                  </div>
-                </div>
-                <div className="flex-grow-1 ms-3">
-                  <h6 className="text-muted mb-1">Total Profit</h6>
-                  <h4 className={`mb-0 fw-bold ${(summary.totalProfit || 0) >= 0 ? 'text-success' : 'text-danger'}`}>
-                    {formatCurrency(summary.totalProfit)}
-                  </h4>
-                  <small className="text-muted">Today: {formatCurrency(summary.todayProfit)}</small>
-                </div>
+        <div className="adm-dash-stat-card">
+          <div className="adm-dash-stat-content">
+            <div className="adm-dash-stat-icon warning">
+              <i className="bi bi-cash-stack"></i>
+            </div>
+            <div className="adm-dash-stat-info">
+              <div className="adm-dash-stat-label">Total Profit</div>
+              <div className={`adm-dash-stat-value ${(summary.totalProfit || 0) >= 0 ? 'adm-dash-stat-success' : 'adm-dash-stat-danger'}`}>
+                {formatCurrency(summary.totalProfit)}
+              </div>
+              <div className="adm-dash-stat-sub">
+                <i className="bi bi-calendar"></i>
+                Today: {formatCurrency(summary.todayProfit)}
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Recent Sales Section */}
-      {recentSales.length > 0 && (
-        <div className="row mb-4">
-          <div className="col-12">
-            <div className="card border-0 shadow-sm">
-              <div className="card-header bg-white py-3">
-                <h6 className="fw-bold mb-0">
-                  <i className="bi bi-clock-history me-2 text-primary"></i>
-                  Recent Sales
-                </h6>
-              </div>
-              <div className="card-body">
-                <div className="table-responsive">
-                  <table className="table table-sm">
-                    <thead>
-                      <tr>
-                        <th>Product</th>
-                        <th>Quantity</th>
-                        <th>Amount</th>
-                        <th>Date</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {recentSales.map((sale, index) => (
-                        <tr key={sale._id || index}>
-                          <td>{sale.productName || sale.product?.name || 'N/A'}</td>
-                          <td>{sale.quantity || 0}</td>
-                          <td>{formatCurrency(sale.amount || 0)}</td>
-                          <td>{sale.date ? new Date(sale.date).toLocaleDateString() : 'N/A'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Filters and Actions */}
-      <div className="row g-3 mb-4">
-        <div className="col-md-4">
-          <div className="input-group">
-            <span className="input-group-text bg-white">
-              <i className="bi bi-search"></i>
-            </span>
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Search products or barcode..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
+      <div className="adm-dash-filters-grid">
+        <div className="adm-dash-search-wrapper">
+          <i className="bi bi-search adm-dash-search-icon"></i>
+          <input
+            type="text"
+            className="adm-dash-search-input"
+            placeholder="Search products or barcode..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
-        <div className="col-md-4">
-          <div className="btn-group w-100">
-            <button 
-              className={`btn ${dateRange === 'all' ? 'btn-primary' : 'btn-outline-primary'}`}
-              onClick={() => setDateRange('all')}
-            >
-              All Products
-            </button>
-            <button 
-              className={`btn ${dateRange === 'profit' ? 'btn-success' : 'btn-outline-success'}`}
-              onClick={() => setDateRange('profit')}
-            >
-              Profit Only
-            </button>
-            <button 
-              className={`btn ${dateRange === 'loss' ? 'btn-danger' : 'btn-outline-danger'}`}
-              onClick={() => setDateRange('loss')}
-            >
-              Loss Only
-            </button>
-          </div>
+        <div className="adm-dash-btn-group">
+          <button 
+            className={`adm-dash-btn ${dateRange === 'all' ? 'adm-dash-btn-primary' : 'adm-dash-btn-outline'}`}
+            onClick={() => setDateRange('all')}
+          >
+            All Products
+          </button>
+          <button 
+            className={`adm-dash-btn ${dateRange === 'profit' ? 'adm-dash-btn-success' : 'adm-dash-btn-outline-success'}`}
+            onClick={() => setDateRange('profit')}
+          >
+            Profit Only
+          </button>
+          <button 
+            className={`adm-dash-btn ${dateRange === 'loss' ? 'adm-dash-btn-danger' : 'adm-dash-btn-outline'}`}
+            onClick={() => setDateRange('loss')}
+          >
+            Loss Only
+          </button>
         </div>
-        <div className="col-md-4">
-          <div className="btn-group w-100">
-            <button className="btn btn-success" onClick={exportToExcel} disabled={!filteredReport.length}>
-              <i className="bi bi-file-excel me-2"></i>
-              Excel
-            </button>
-            <button className="btn btn-outline-success" onClick={exportAsCSV} disabled={!filteredReport.length}>
-              <i className="bi bi-filetype-csv me-2"></i>
-              CSV
-            </button>
-          </div>
+        <div className="adm-dash-btn-group">
+          <button className="adm-dash-btn adm-dash-btn-success" onClick={exportToExcel} disabled={!filteredReport.length}>
+            <i className="bi bi-file-excel me-2"></i>
+            Excel
+          </button>
+          <button className="adm-dash-btn adm-dash-btn-outline-success" onClick={exportAsCSV} disabled={!filteredReport.length}>
+            <i className="bi bi-filetype-csv me-2"></i>
+            CSV
+          </button>
         </div>
       </div>
 
       {/* Summary Stats */}
-      <div className="row g-3 mb-4">
-        <div className="col-12">
-          <div className="card border-0 shadow-sm bg-light">
-            <div className="card-body py-3">
-              <div className="row text-center">
-                <div className="col">
-                  <div className="px-3">
-                    <small className="text-muted d-block">Total Stock</small>
-                    <span className="fw-bold fs-5">{totals.totalStock}</span>
-                  </div>
-                </div>
-                <div className="col">
-                  <div className="px-3 border-start">
-                    <small className="text-muted d-block">Total Sold</small>
-                    <span className="fw-bold fs-5">{totals.totalSold}</span>
-                  </div>
-                </div>
-                <div className="col">
-                  <div className="px-3 border-start">
-                    <small className="text-muted d-block">Sales Value</small>
-                    <span className="fw-bold fs-5 text-success">{formatCurrency(totals.totalSales)}</span>
-                  </div>
-                </div>
-                <div className="col">
-                  <div className="px-3 border-start">
-                    <small className="text-muted d-block">Purchase Value</small>
-                    <span className="fw-bold fs-5 text-danger">{formatCurrency(totals.totalPurchases)}</span>
-                  </div>
-                </div>
-                <div className="col">
-                  <div className="px-3 border-start">
-                    <small className="text-muted d-block">Net Profit</small>
-                    <span className={`fw-bold fs-5 ${totals.totalProfit >= 0 ? 'text-success' : 'text-danger'}`}>
-                      {formatCurrency(totals.totalProfit)}
-                    </span>
-                  </div>
-                </div>
+      <div className="adm-dash-summary-bar">
+        <div className="adm-dash-summary-card">
+          <div className="adm-dash-summary-grid">
+            <div className="adm-dash-summary-item">
+              <div className="adm-dash-summary-label">Total Stock</div>
+              <div className="adm-dash-summary-value">{totals.totalStock}</div>
+            </div>
+            <div className="adm-dash-summary-item">
+              <div className="adm-dash-summary-label">Total Sold</div>
+              <div className="adm-dash-summary-value">{totals.totalSold}</div>
+            </div>
+            <div className="adm-dash-summary-item">
+              <div className="adm-dash-summary-label">Sales Value</div>
+              <div className="adm-dash-summary-value success">{formatCurrency(totals.totalSales)}</div>
+            </div>
+            <div className="adm-dash-summary-item">
+              <div className="adm-dash-summary-label">Purchase Value</div>
+              <div className="adm-dash-summary-value danger">{formatCurrency(totals.totalPurchases)}</div>
+            </div>
+            <div className="adm-dash-summary-item">
+              <div className="adm-dash-summary-label">Net Profit</div>
+              <div className={`adm-dash-summary-value ${totals.totalProfit >= 0 ? 'success' : 'danger'}`}>
+                {formatCurrency(totals.totalProfit)}
               </div>
             </div>
           </div>
@@ -519,161 +431,145 @@ function AdminDashboard() {
       </div>
 
       {/* Product Report Table */}
-      <div className="card border-0 shadow-sm">
-        <div className="card-header bg-white py-3">
-          <div className="d-flex justify-content-between align-items-center">
-            <h6 className="fw-bold mb-0">
-              <i className="bi bi-table me-2 text-primary"></i>
+      <div className="adm-dash-section-card adm-dash-product-table">
+        <div className="adm-dash-product-header">
+          <div className="adm-dash-product-title">
+            <h3>
+              <i className="bi bi-table me-2" style={{ color: '#2563eb' }}></i>
               Product Report
-              <span className="badge bg-primary bg-opacity-10 text-primary ms-2">
-                {filteredReport.length} products
-              </span>
-            </h6>
-            <small className="text-muted">
-              Last updated: {new Date().toLocaleString()}
-            </small>
+            </h3>
+            <span className="adm-dash-count-badge">{filteredReport.length} products</span>
+          </div>
+          <div className="adm-dash-timestamp">
+            <i className="bi bi-clock me-1"></i>
+            Last updated: {new Date().toLocaleString()}
           </div>
         </div>
-        <div className="card-body p-0">
-          <div className="table-responsive">
-            <table className="table table-hover align-middle mb-0">
-              <thead className="bg-light">
-                <tr>
-                  <th className="cursor-pointer px-3" onClick={() => handleSort('productName')}>
-                    Product {getSortIcon('productName')}
-                  </th>
-                  <th className="cursor-pointer" onClick={() => handleSort('barcode')}>
-                    Barcode {getSortIcon('barcode')}
-                  </th>
-                  <th className="text-center cursor-pointer" onClick={() => handleSort('currentStock')}>
-                    Stock {getSortIcon('currentStock')}
-                  </th>
-                  <th className="text-center cursor-pointer" onClick={() => handleSort('totalSoldQty')}>
-                    Sold {getSortIcon('totalSoldQty')}
-                  </th>
-                  <th className="text-center">Purchased</th>
-                  <th className="text-end cursor-pointer" onClick={() => handleSort('purchaseRate')}>
-                    Purchase Rate {getSortIcon('purchaseRate')}
-                  </th>
-                  <th className="text-end cursor-pointer" onClick={() => handleSort('sellingRate')}>
-                    Selling Rate {getSortIcon('sellingRate')}
-                  </th>
-                  <th className="text-end">Purchase Value</th>
-                  <th className="text-end">Sales Value</th>
-                  <th className="text-end cursor-pointer" onClick={() => handleSort('profit')}>
-                    Profit/Loss {getSortIcon('profit')}
-                  </th>
-                  <th className="text-center cursor-pointer" onClick={() => handleSort('profitMargin')}>
-                    Margin {getSortIcon('profitMargin')}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredReport.map((item, index) => (
-                  <tr key={item._id || index}>
-                    <td className="px-3">
-                      <div className="d-flex align-items-center">
-                        <div className="bg-light rounded p-1 me-2">
-                          <i className="bi bi-box text-primary"></i>
-                        </div>
-                        <div>
-                          <span className="fw-medium">{item.productName || 'N/A'}</span>
-                          {(item.profitMargin || 0) > 20 && (
-                            <span className="badge bg-success bg-opacity-10 text-success ms-2">High Margin</span>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <code className="text-muted">{item.barcode || 'N/A'}</code>
-                    </td>
-                    <td className="text-center">
-                      <span className={`badge ${(item.currentStock || 0) > 0 ? 'bg-info' : 'bg-secondary'} bg-opacity-10 text-${(item.currentStock || 0) > 0 ? 'info' : 'secondary'}`}>
-                        {item.currentStock || 0}
+        <div className="adm-dash-table-responsive">
+          <table className="adm-dash-table">
+            <thead>
+              <tr>
+                <th className="adm-dash-sortable" onClick={() => handleSort('productName')}>
+                  Product {getSortIcon('productName')}
+                </th>
+                <th className="adm-dash-sortable" onClick={() => handleSort('barcode')}>
+                  Barcode {getSortIcon('barcode')}
+                </th>
+                <th className="text-center adm-dash-sortable" onClick={() => handleSort('currentStock')}>
+                  Stock {getSortIcon('currentStock')}
+                </th>
+                <th className="text-center adm-dash-sortable" onClick={() => handleSort('totalSoldQty')}>
+                  Sold {getSortIcon('totalSoldQty')}
+                </th>
+                <th className="text-center">Purchased</th>
+                <th className="text-end adm-dash-sortable" onClick={() => handleSort('purchaseRate')}>
+                  Purchase Rate {getSortIcon('purchaseRate')}
+                </th>
+                <th className="text-end adm-dash-sortable" onClick={() => handleSort('sellingRate')}>
+                  Selling Rate {getSortIcon('sellingRate')}
+                </th>
+                <th className="text-end">Purchase Value</th>
+                <th className="text-end">Sales Value</th>
+                <th className="text-end adm-dash-sortable" onClick={() => handleSort('profit')}>
+                  Profit/Loss {getSortIcon('profit')}
+                </th>
+                <th className="text-center adm-dash-sortable" onClick={() => handleSort('profitMargin')}>
+                  Margin {getSortIcon('profitMargin')}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredReport.map((item, index) => (
+                <tr key={item._id || index}>
+                  <td>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span className="adm-dash-product-badge primary">
+                        <i className="bi bi-box"></i>
                       </span>
-                    </td>
-                    <td className="text-center">
-                      <span className="badge bg-warning bg-opacity-10 text-warning">
-                        {item.totalSoldQty || 0}
-                      </span>
-                    </td>
-                    <td className="text-center">
-                      <span className="badge bg-secondary bg-opacity-10 text-secondary">
-                        {item.totalPurchasedQty || 0}
-                      </span>
-                    </td>
-                    <td className="text-end">{formatCurrency(item.purchaseRate)}</td>
-                    <td className="text-end">{formatCurrency(item.sellingRate)}</td>
-                    <td className="text-end text-danger">{formatCurrency(item.totalPurchaseValue)}</td>
-                    <td className="text-end text-success">{formatCurrency(item.totalSalesValue)}</td>
-                    <td className={`text-end fw-bold ${(item.profit || 0) >= 0 ? 'text-success' : 'text-danger'}`}>
-                      {(item.profit || 0) >= 0 ? '+' : ''}{formatCurrency(item.profit)}
-                    </td>
-                    <td className="text-center">
-                      <span className={`badge ${(item.profitMargin || 0) >= 0 ? 'bg-success' : 'bg-danger'}`}>
-                        {(item.profitMargin || 0).toFixed(2)}%
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot className="table-light fw-bold">
-                <tr>
-                  <td colSpan="2" className="px-3">Totals ({filteredReport.length} products)</td>
-                  <td className="text-center">{totals.totalStock}</td>
-                  <td className="text-center">{totals.totalSold}</td>
-                  <td></td>
-                  <td></td>
-                  <td></td>
-                  <td className="text-end text-danger">{formatCurrency(totals.totalPurchases)}</td>
-                  <td className="text-end text-success">{formatCurrency(totals.totalSales)}</td>
-                  <td className={`text-end ${totals.totalProfit >= 0 ? 'text-success' : 'text-danger'}`}>
-                    {totals.totalProfit >= 0 ? '+' : ''}{formatCurrency(totals.totalProfit)}
+                      <span>{item.productName || 'N/A'}</span>
+                      {(item.profitMargin || 0) > 20 && (
+                        <span className="adm-dash-product-badge success">High Margin</span>
+                      )}
+                    </div>
                   </td>
-                  <td></td>
+                  <td>
+                    <code className="text-muted">{item.barcode || 'N/A'}</code>
+                  </td>
+                  <td className="text-center">
+                    <span className={`adm-dash-product-badge ${(item.currentStock || 0) > 0 ? 'info' : 'secondary'}`}>
+                      {item.currentStock || 0}
+                    </span>
+                  </td>
+                  <td className="text-center">
+                    <span className="adm-dash-product-badge warning">
+                      {item.totalSoldQty || 0}
+                    </span>
+                  </td>
+                  <td className="text-center">
+                    <span className="adm-dash-product-badge secondary">
+                      {item.totalPurchasedQty || 0}
+                    </span>
+                  </td>
+                  <td className="text-end">{formatCurrency(item.purchaseRate)}</td>
+                  <td className="text-end">{formatCurrency(item.sellingRate)}</td>
+                  <td className="text-end text-danger">{formatCurrency(item.totalPurchaseValue)}</td>
+                  <td className="text-end text-success">{formatCurrency(item.totalSalesValue)}</td>
+                  <td className={`text-end fw-bold ${(item.profit || 0) >= 0 ? 'text-success' : 'text-danger'}`}>
+                    {(item.profit || 0) >= 0 ? '+' : ''}{formatCurrency(item.profit)}
+                  </td>
+                  <td className="text-center">
+                    <span className={`adm-dash-product-badge ${(item.profitMargin || 0) >= 0 ? 'success' : 'danger'}`}>
+                      {(item.profitMargin || 0).toFixed(2)}%
+                    </span>
+                  </td>
                 </tr>
-              </tfoot>
-            </table>
+              ))}
+            </tbody>
+            <tfoot style={{ background: '#f8fafc', fontWeight: 600 }}>
+              <tr>
+                <td colSpan="2">Totals ({filteredReport.length} products)</td>
+                <td className="text-center">{totals.totalStock}</td>
+                <td className="text-center">{totals.totalSold}</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td className="text-end text-danger">{formatCurrency(totals.totalPurchases)}</td>
+                <td className="text-end text-success">{formatCurrency(totals.totalSales)}</td>
+                <td className={`text-end ${totals.totalProfit >= 0 ? 'text-success' : 'text-danger'}`}>
+                  {totals.totalProfit >= 0 ? '+' : ''}{formatCurrency(totals.totalProfit)}
+                </td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
 
-            {filteredReport.length === 0 && (
-              <div className="text-center py-5">
-                <i className="bi bi-inbox fs-1 text-muted"></i>
-                <p className="text-muted mt-2">No products found</p>
-                {(searchTerm || dateRange !== 'all') && (
-                  <button 
-                    className="btn btn-outline-primary btn-sm"
-                    onClick={() => {
-                      setSearchTerm('');
-                      setDateRange('all');
-                    }}
-                  >
-                    Clear Filters
-                  </button>
-                )}
+          {filteredReport.length === 0 && (
+            <div className="adm-dash-empty-state">
+              <div className="adm-dash-empty-icon">
+                <i className="bi bi-inbox"></i>
               </div>
-            )}
-          </div>
+              <h4 className="adm-dash-empty-title">No Products Found</h4>
+              <p className="adm-dash-empty-text">
+                {searchTerm || dateRange !== 'all' 
+                  ? "No products match your filters. Try adjusting your search criteria."
+                  : "No products available in the database."}
+              </p>
+              {(searchTerm || dateRange !== 'all') && (
+                <button 
+                  className="adm-dash-btn adm-dash-btn-primary"
+                  onClick={() => {
+                    setSearchTerm('');
+                    setDateRange('all');
+                  }}
+                >
+                  <i className="bi bi-arrow-repeat me-2"></i>
+                  Clear Filters
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Add custom CSS */}
-      <style>{`
-        .cursor-pointer {
-          cursor: pointer;
-          transition: background-color 0.2s;
-        }
-        .cursor-pointer:hover {
-          background-color: #f8f9fa !important;
-        }
-        .table thead th {
-          border-bottom-width: 1px;
-          font-weight: 600;
-          color: #495057;
-        }
-        .badge {
-          font-weight: 500;
-        }
-      `}</style>
     </div>
   );
 }
