@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { productsAPI, settingsAPI } from "../services/api";
+import "./Home.css";
 
 function Home() {
   const [products, setProducts] = useState([]);
@@ -119,7 +120,18 @@ function Home() {
     try {
       const res = await settingsAPI.getSettings();
       if (res.success && res.settings) {
-        setBusinessData(res.settings);
+        const settings = res.settings;
+        setBusinessData({
+          businessName: settings.businessName || "Advait Collections",
+          tagline: settings.tagline || "Premium Garments & Fashion Accessories",
+          description: settings.description || "",
+          logo: settings.logo || { url: "", publicId: "" },
+          address: settings.address || businessData.address,
+          phoneNumbers: settings.phoneNumbers?.length > 0 ? settings.phoneNumbers : businessData.phoneNumbers,
+          emails: settings.emails?.length > 0 ? settings.emails : businessData.emails,
+          socialMedia: settings.socialMedia || {},
+          businessHours: settings.businessHours || businessData.businessHours
+        });
       }
     } catch {
       console.log("Using default business data");
@@ -250,13 +262,13 @@ function Home() {
   return (
     <div className="home-page">
       {/* Hero Section - Light Grey with Auto-Scrolling Cards */}
-      <section className="hero-section">
+      <section className="home-hero-section">
         <div className="container">
           <div className="row align-items-center">
             <div className="col-lg-5 mb-3 mb-lg-0">
-              <div className="hero-content">
-                <h1 className="hero-title">{businessData.businessName}</h1>
-                <p className="hero-subtitle">{businessData.tagline}</p>
+              <div className="home-hero-content">
+                <h1 className="home-hero-title">{businessData.businessName}</h1>
+                <p className="home-hero-subtitle">{businessData.tagline}</p>
                 <div className="d-flex gap-2 flex-wrap">
                   <span className="badge bg-dark text-white py-2 px-3 rounded-pill">
                     <i className="bi bi-shop me-2"></i>
@@ -272,13 +284,13 @@ function Home() {
             <div className="col-lg-7">
               <div 
                 ref={scrollContainerRef}
-                className="scroll-container"
+                className="home-scroll-container"
               >
                 {/* Duplicate products to create seamless infinite scroll effect */}
                 {products.concat(products).map((product, index) => (
                   <Link to={`/product/${product._id}`} key={`${product._id}-${index}`} style={{ textDecoration: 'none' }}>
-                    <div className="hero-product-card">
-                      <div className="hero-product-image">
+                    <div className="home-hero-product-card">
+                      <div className="home-hero-product-image">
                         <img
                           src={product.image || "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=300&auto=format"}
                           alt={product.name}
@@ -287,9 +299,9 @@ function Home() {
                           }}
                         />
                       </div>
-                      <div className="hero-product-info">
-                        <div className="hero-product-name">{product.name}</div>
-                        <div className="hero-product-price">₹{product.sellingRate}</div>
+                      <div className="home-hero-product-info">
+                        <div className="home-hero-product-name">{product.name}</div>
+                        <div className="home-hero-product-price">₹{product.sellingRate}</div>
                       </div>
                     </div>
                   </Link>
@@ -309,48 +321,48 @@ function Home() {
         {/* Categories */}
         <section>
           <h2 className="fs-4 fw-semibold mb-3">Shop by Category</h2>
-          <div className="category-grid">
+          <div className="home-category-grid">
             {categories.map((category) => (
               <div 
                 key={category.id}
-                className="category-card"
+                className="home-category-card"
                 onClick={() => setSelectedCategory(category.name)}
               >
-                <div className="category-icon" style={{ background: category.color }}>
+                <div className="home-category-icon" style={{ background: category.color }}>
                   <i className={`bi ${category.icon}`}></i>
                 </div>
-                <div className="category-name">{category.name}</div>
-                <div className="category-count">New styles</div>
+                <div className="home-category-name">{category.name}</div>
+                <div className="home-category-count">New styles</div>
               </div>
             ))}
           </div>
         </section>
 
         {/* Stats */}
-        <section className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-icon blue">
+        <section className="home-stats-grid">
+          <div className="home-stat-card">
+            <div className="home-stat-icon blue">
               <i className="bi bi-box-seam"></i>
             </div>
-            <div className="stat-info">
+            <div className="home-stat-info">
               <h3>{products.reduce((sum, p) => sum + (p.quantity || 0), 0)}</h3>
               <p>Total Items</p>
             </div>
           </div>
-          <div className="stat-card">
-            <div className="stat-icon green">
+          <div className="home-stat-card">
+            <div className="home-stat-icon green">
               <i className="bi bi-tags"></i>
             </div>
-            <div className="stat-info">
+            <div className="home-stat-info">
               <h3>{products.length}</h3>
               <p>Products</p>
             </div>
           </div>
-          <div className="stat-card">
-            <div className="stat-icon yellow">
+          <div className="home-stat-card">
+            <div className="home-stat-icon yellow">
               <i className="bi bi-exclamation-triangle"></i>
             </div>
-            <div className="stat-info">
+            <div className="home-stat-info">
               <h3>{products.filter(p => p.quantity > 0 && p.quantity < 10).length}</h3>
               <p>Low Stock</p>
             </div>
@@ -368,15 +380,15 @@ function Home() {
 
           {displayedProducts.length > 0 ? (
             <>
-              <div className="products-grid">
+              <div className="home-products-grid">
                 {displayedProducts.slice(0, 4).map((product) => {
                   const stockStatus = getStockStatus(product.quantity);
                   const isLatest = latestProduct && product._id === latestProduct._id;
                   
                   return (
                     <Link to={`/product/${product._id}`} key={product._id} style={{ textDecoration: 'none' }}>
-                      <div className="product-card">
-                        <div className="product-image">
+                      <div className="home-product-card">
+                        <div className="home-product-image">
                           <img
                             src={product.image || "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=400&auto=format"}
                             alt={product.name}
@@ -385,51 +397,46 @@ function Home() {
                             }}
                           />
                           {isLatest && (
-                            <span className="product-badge">
+                            <span className="home-product-badge">
                               <i className="bi bi-stars me-1"></i>
                               New
                             </span>
                           )}
                         </div>
                         
-                        <div className="product-info">
-                          <h3 className="product-name">{product.name}</h3>
+                        <div className="home-product-info">
+                          <h3 className="home-product-name">{product.name}</h3>
                           
-                          <div className="product-tags">
-                            <span className="product-tag">
+                          <div className="home-product-tags">
+                            <span className="home-product-tag">
                               <i className="bi bi-rulers me-1"></i>
                               {product.size}
                             </span>
-                            <span className="product-tag">
-                              <span className="color-dot" style={{ 
-                                backgroundColor: product.color?.code || '#000', 
-                                display: 'inline-block', 
-                                width: '10px', 
-                                height: '10px', 
-                                borderRadius: '50%', 
-                                marginRight: '4px' 
+                            <span className="home-product-tag">
+                              <span className="home-color-dot" style={{ 
+                                backgroundColor: product.color?.code || '#000'
                               }}></span>
                               {product.color?.name || 'N/A'}
                             </span>
-                            <span className="product-tag">
+                            <span className="home-product-tag">
                               <i className="bi bi-tag me-1"></i>
                               {product.fabric}
                             </span>
                           </div>
 
-                          <div className="product-price">
-                            <span className="price">₹{product.sellingRate}</span>
-                            <span className="stock">{product.quantity || 0} units</span>
+                          <div className="home-product-price">
+                            <span className="home-price">₹{product.sellingRate}</span>
+                            <span className="home-stock">{product.quantity || 0} units</span>
                           </div>
 
-                          <div className="stock-bar">
+                          <div className="home-stock-bar">
                             <div 
-                              className="stock-fill" 
+                              className="home-stock-fill" 
                               style={{ width: `${getStockPercentage(product.quantity || 0)}%` }}
                             ></div>
                           </div>
 
-                          <span className="view-link">
+                          <span className="home-view-link">
                             View Details <i className="bi bi-arrow-right"></i>
                           </span>
                         </div>
@@ -454,26 +461,26 @@ function Home() {
         </section>
 
         {/* Business Info */}
-        <section className="business-card">
+        <section className="home-business-card">
           <div className="row">
             <div className="col-md-6">
               <h3 className="fs-5 fw-semibold mb-3">Store Information</h3>
-              <div className="info-grid">
-                <div className="info-item">
-                  <div className="info-icon">
+              <div className="home-info-grid">
+                <div className="home-info-item">
+                  <div className="home-info-icon">
                     <i className="bi bi-geo-alt"></i>
                   </div>
-                  <div className="info-content">
+                  <div className="home-info-content">
                     <h4>Address</h4>
                     <p>{businessData.address?.fullAddress || `${businessData.address?.street || ''}, ${businessData.address?.city || ''}, ${businessData.address?.state || ''} - ${businessData.address?.pincode || ''}`}</p>
                   </div>
                 </div>
                 
-                <div className="info-item">
-                  <div className="info-icon">
+                <div className="home-info-item">
+                  <div className="home-info-icon">
                     <i className="bi bi-telephone"></i>
                   </div>
-                  <div className="info-content">
+                  <div className="home-info-content">
                     <h4>Phone</h4>
                     {primaryPhone && (
                       <p><a href={`tel:${primaryPhone.number}`}>{primaryPhone.number}</a></p>
@@ -481,11 +488,11 @@ function Home() {
                   </div>
                 </div>
 
-                <div className="info-item">
-                  <div className="info-icon">
+                <div className="home-info-item">
+                  <div className="home-info-icon">
                     <i className="bi bi-envelope"></i>
                   </div>
-                  <div className="info-content">
+                  <div className="home-info-content">
                     <h4>Email</h4>
                     {primaryEmail && (
                       <p><a href={`mailto:${primaryEmail.email}`}>{primaryEmail.email}</a></p>
@@ -497,11 +504,11 @@ function Home() {
 
             <div className="col-md-6">
               <h3 className="fs-5 fw-semibold mb-3">Store Hours</h3>
-              <div className="hours-list">
+              <div className="home-hours-list">
                 {businessData.businessHours && Object.entries(businessData.businessHours).map(([day, hours]) => (
-                  <div key={day} className="hour-item">
-                    <span className="hour-day text-capitalize">{day}</span>
-                    <span className="hour-time">
+                  <div key={day} className="home-hour-item">
+                    <span className="home-hour-day text-capitalize">{day}</span>
+                    <span className="home-hour-time">
                       {hours.closed ? 'Closed' : `${formatTime(hours.open)} - ${formatTime(hours.close)}`}
                     </span>
                   </div>
@@ -559,7 +566,7 @@ function Home() {
 
       {/* Back to Top */}
       <button 
-        className={`back-to-top ${!showBackToTop ? 'hidden' : ''}`}
+        className={`home-back-to-top ${!showBackToTop ? 'hidden' : ''}`}
         onClick={scrollToTop}
         aria-label="Back to top"
       >
