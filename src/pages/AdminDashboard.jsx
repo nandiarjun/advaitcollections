@@ -97,13 +97,13 @@ function AdminDashboard() {
 
       const exportData = filteredReport.map(item => ({
         "Product Name": safeString(item.productName),
-        "Barcode": safeString(item.barcode),
         "Current Stock": safeNumber(item.currentStock),
-        "Total Sold": safeNumber(item.totalSoldQty),
-        "Total Purchased": safeNumber(item.totalPurchasedQty),
-        "Purchase Rate": `₹${safeNumber(item.purchaseRate).toFixed(2)}`,
-        "Selling Rate": `₹${safeNumber(item.sellingRate).toFixed(2)}`,
+        "Purchase Price": `₹${safeNumber(item.purchaseRate).toFixed(2)}`,
+        "Total Purchased QTY": safeNumber(item.totalPurchasedQty),
         "Total Purchase Value": `₹${safeNumber(item.totalPurchaseValue).toFixed(2)}`,
+        "Total Sold QTY": safeNumber(item.totalSoldQty),
+        "Selling Price": `₹${safeNumber(item.sellingRate).toFixed(2)}`,
+        "Custom Selling Price": safeNumber(item.customSellingPrice) > 0 ? `₹${safeNumber(item.customSellingPrice).toFixed(2)}` : '-',
         "Total Sales Value": `₹${safeNumber(item.totalSalesValue).toFixed(2)}`,
         "Profit/Loss": `₹${safeNumber(item.profit).toFixed(2)}`,
         "Profit Margin": formatPercentage(item.profitMargin)
@@ -113,8 +113,8 @@ function AdminDashboard() {
       const workbook = XLSX.utils.book_new();
 
       const colWidths = [
-        { wch: 30 }, { wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 15 },
-        { wch: 15 }, { wch: 15 }, { wch: 20 }, { wch: 20 }, { wch: 15 }, { wch: 15 }
+        { wch: 30 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 20 },
+        { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 20 }, { wch: 15 }, { wch: 15 }
       ];
       worksheet['!cols'] = colWidths;
 
@@ -147,17 +147,17 @@ function AdminDashboard() {
       }
 
       const exportData = filteredReport.map(item => ({
-        Product: safeString(item.productName),
-        Barcode: safeString(item.barcode),
-        Stock: safeNumber(item.currentStock),
-        Sold: safeNumber(item.totalSoldQty),
-        Purchased: safeNumber(item.totalPurchasedQty),
-        Purchase_Rate: safeNumber(item.purchaseRate).toFixed(2),
-        Selling_Rate: safeNumber(item.sellingRate).toFixed(2),
-        Purchase_Value: safeNumber(item.totalPurchaseValue).toFixed(2),
-        Sales_Value: safeNumber(item.totalSalesValue).toFixed(2),
-        Profit: safeNumber(item.profit).toFixed(2),
-        Margin: formatPercentage(item.profitMargin)
+        Product_Name: safeString(item.productName),
+        Current_Stock: safeNumber(item.currentStock),
+        Purchase_Price: safeNumber(item.purchaseRate).toFixed(2),
+        Total_Purchased_QTY: safeNumber(item.totalPurchasedQty),
+        Total_Purchase_Value: safeNumber(item.totalPurchaseValue).toFixed(2),
+        Total_Sold_QTY: safeNumber(item.totalSoldQty),
+        Selling_Price: safeNumber(item.sellingRate).toFixed(2),
+        Custom_Selling_Price: safeNumber(item.customSellingPrice) > 0 ? safeNumber(item.customSellingPrice).toFixed(2) : '-',
+        Total_Sales_Value: safeNumber(item.totalSalesValue).toFixed(2),
+        Profit_Loss: safeNumber(item.profit).toFixed(2),
+        Profit_Margin: formatPercentage(item.profitMargin)
       }));
 
       const worksheet = XLSX.utils.json_to_sheet(exportData);
@@ -189,8 +189,7 @@ function AdminDashboard() {
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(item =>
-        safeString(item.productName).toLowerCase().includes(term) ||
-        safeString(item.barcode).toLowerCase().includes(term)
+        safeString(item.productName).toLowerCase().includes(term)
       );
     }
 
@@ -223,13 +222,15 @@ function AdminDashboard() {
     totalPurchases: acc.totalPurchases + safeNumber(item.totalPurchaseValue),
     totalProfit: acc.totalProfit + safeNumber(item.profit),
     totalStock: acc.totalStock + safeNumber(item.currentStock),
-    totalSold: acc.totalSold + safeNumber(item.totalSoldQty)
+    totalSold: acc.totalSold + safeNumber(item.totalSoldQty),
+    totalPurchasedQty: acc.totalPurchasedQty + safeNumber(item.totalPurchasedQty)
   }), {
     totalSales: 0,
     totalPurchases: 0,
     totalProfit: 0,
     totalStock: 0,
-    totalSold: 0
+    totalSold: 0,
+    totalPurchasedQty: 0
   });
 
   const formatCurrency = (amount) => {
@@ -389,7 +390,7 @@ function AdminDashboard() {
           <input
             type="text"
             className="adm-dash-search-input"
-            placeholder="Search products or barcode..."
+            placeholder="Search products..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -462,7 +463,7 @@ function AdminDashboard() {
           <div className="adm-dash-product-title">
             <h3>
               <i className="bi bi-table me-2" style={{ color: '#2563eb' }}></i>
-              Product Report
+              Purchase & Sales Details
             </h3>
             <span className="adm-dash-count-badge">{filteredReport.length} products</span>
           </div>
@@ -475,32 +476,42 @@ function AdminDashboard() {
           <table className="adm-dash-table">
             <thead>
               <tr>
+                <th colSpan="1" className="adm-dash-section-header">Product Info</th>
+                <th colSpan="4" className="adm-dash-section-header purchase-header">Purchase Details</th>
+                <th colSpan="5" className="adm-dash-section-header sales-header">Sales Details</th>
+                <th colSpan="2" className="adm-dash-section-header">Summary</th>
+              </tr>
+              <tr>
                 <th className="adm-dash-sortable" onClick={() => handleSort('productName')}>
-                  Product {getSortIcon('productName')}
-                </th>
-                <th className="adm-dash-sortable" onClick={() => handleSort('barcode')}>
-                  Barcode {getSortIcon('barcode')}
+                  Product Name {getSortIcon('productName')}
                 </th>
                 <th className="text-center adm-dash-sortable" onClick={() => handleSort('currentStock')}>
-                  Stock {getSortIcon('currentStock')}
+                  Current Stock {getSortIcon('currentStock')}
+                </th>
+                <th className="text-end adm-dash-sortable" onClick={() => handleSort('purchaseRate')}>
+                  Purchase Price {getSortIcon('purchaseRate')}
+                </th>
+                <th className="text-center adm-dash-sortable" onClick={() => handleSort('totalPurchasedQty')}>
+                  Total Purchased QTY {getSortIcon('totalPurchasedQty')}
+                </th>
+                <th className="text-end adm-dash-sortable" onClick={() => handleSort('totalPurchaseValue')}>
+                  Total Purchase Value {getSortIcon('totalPurchaseValue')}
                 </th>
                 <th className="text-center adm-dash-sortable" onClick={() => handleSort('totalSoldQty')}>
-                  Sold {getSortIcon('totalSoldQty')}
-                </th>
-                <th className="text-center">Purchased</th>
-                <th className="text-end adm-dash-sortable" onClick={() => handleSort('purchaseRate')}>
-                  Purchase Rate {getSortIcon('purchaseRate')}
+                  Total Sold QTY {getSortIcon('totalSoldQty')}
                 </th>
                 <th className="text-end adm-dash-sortable" onClick={() => handleSort('sellingRate')}>
-                  Selling Rate {getSortIcon('sellingRate')}
+                  Selling Price {getSortIcon('sellingRate')}
                 </th>
-                <th className="text-end">Purchase Value</th>
-                <th className="text-end">Sales Value</th>
+                <th className="text-end">Custom Price</th>
+                <th className="text-end adm-dash-sortable" onClick={() => handleSort('totalSalesValue')}>
+                  Total Sales Value {getSortIcon('totalSalesValue')}
+                </th>
                 <th className="text-end adm-dash-sortable" onClick={() => handleSort('profit')}>
                   Profit/Loss {getSortIcon('profit')}
                 </th>
                 <th className="text-center adm-dash-sortable" onClick={() => handleSort('profitMargin')}>
-                  Margin {getSortIcon('profitMargin')}
+                  Profit Margin {getSortIcon('profitMargin')}
                 </th>
               </tr>
             </thead>
@@ -512,34 +523,37 @@ function AdminDashboard() {
                       <span className="adm-dash-product-badge primary">
                         <i className="bi bi-box"></i>
                       </span>
-                      <span>{safeString(item.productName)}</span>
-                      {safeNumber(item.profitMargin) > 20 && (
-                        <span className="adm-dash-product-badge success">High Margin</span>
-                      )}
+                      <span className="fw-medium">{safeString(item.productName)}</span>
                     </div>
-                  </td>
-                  <td>
-                    <code className="text-muted">{safeString(item.barcode)}</code>
                   </td>
                   <td className="text-center">
                     <span className={`adm-dash-product-badge ${safeNumber(item.currentStock) > 0 ? 'info' : 'secondary'}`}>
                       {safeNumber(item.currentStock)}
                     </span>
                   </td>
-                  <td className="text-center">
-                    <span className="adm-dash-product-badge warning">
-                      {safeNumber(item.totalSoldQty)}
-                    </span>
-                  </td>
+                  <td className="text-end fw-medium">{formatCurrency(item.purchaseRate)}</td>
                   <td className="text-center">
                     <span className="adm-dash-product-badge secondary">
                       {safeNumber(item.totalPurchasedQty)}
                     </span>
                   </td>
-                  <td className="text-end">{formatCurrency(item.purchaseRate)}</td>
-                  <td className="text-end">{formatCurrency(item.sellingRate)}</td>
-                  <td className="text-end text-danger">{formatCurrency(item.totalPurchaseValue)}</td>
-                  <td className="text-end text-success">{formatCurrency(item.totalSalesValue)}</td>
+                  <td className="text-end text-danger fw-medium">{formatCurrency(item.totalPurchaseValue)}</td>
+                  <td className="text-center">
+                    <span className="adm-dash-product-badge warning">
+                      {safeNumber(item.totalSoldQty)}
+                    </span>
+                  </td>
+                  <td className="text-end fw-medium">{formatCurrency(item.sellingRate)}</td>
+                  <td className="text-end">
+                    {safeNumber(item.customSellingPrice) > 0 ? (
+                      <span className="adm-dash-product-badge success">
+                        {formatCurrency(item.customSellingPrice)}
+                      </span>
+                    ) : (
+                      <span className="text-muted">—</span>
+                    )}
+                  </td>
+                  <td className="text-end text-success fw-medium">{formatCurrency(item.totalSalesValue)}</td>
                   <td className={`text-end fw-bold ${safeNumber(item.profit) >= 0 ? 'text-success' : 'text-danger'}`}>
                     {safeNumber(item.profit) >= 0 ? '+' : ''}{formatCurrency(item.profit)}
                   </td>
@@ -553,13 +567,14 @@ function AdminDashboard() {
             </tbody>
             <tfoot style={{ background: '#f8fafc', fontWeight: 600 }}>
               <tr>
-                <td colSpan="2">Totals ({filteredReport.length} products)</td>
+                <td>Totals ({filteredReport.length} products)</td>
                 <td className="text-center">{totals.totalStock}</td>
+                <td></td>
+                <td className="text-center">{totals.totalPurchasedQty}</td>
+                <td className="text-end text-danger">{formatCurrency(totals.totalPurchases)}</td>
                 <td className="text-center">{totals.totalSold}</td>
                 <td></td>
                 <td></td>
-                <td></td>
-                <td className="text-end text-danger">{formatCurrency(totals.totalPurchases)}</td>
                 <td className="text-end text-success">{formatCurrency(totals.totalSales)}</td>
                 <td className={`text-end ${totals.totalProfit >= 0 ? 'text-success' : 'text-danger'}`}>
                   {totals.totalProfit >= 0 ? '+' : ''}{formatCurrency(totals.totalProfit)}
