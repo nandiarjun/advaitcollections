@@ -17,9 +17,9 @@ import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import AddProduct from "./pages/AddProduct";
 import Sales from "./pages/Sales";
-
 import SalesReport from "./pages/SalesReport";
 import AdminSettings from "./pages/AdminSettings";
+import AllProductList from "./pages/AllProductList"; // New import
 
 // ================= PUBLIC LAYOUT =================
 function PublicLayout({ children }) {
@@ -132,8 +132,6 @@ function App() {
           }
         />
 
-       
-
         <Route
           path="/admin-dashboard/sales-report"
           element={
@@ -151,6 +149,30 @@ function App() {
             <ProtectedRoute>
               <AdminLayout>
                 <AdminSettings />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* New All Products Route */}
+        <Route
+          path="/admin-dashboard/all-products"
+          element={
+            <ProtectedRoute>
+              <AdminLayout>
+                <AllProductList />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Edit Product Route */}
+        <Route
+          path="/admin-dashboard/edit-product/:id"
+          element={
+            <ProtectedRoute>
+              <AdminLayout>
+                <AddProduct /> {/* Reusing AddProduct component for edit */}
               </AdminLayout>
             </ProtectedRoute>
           }

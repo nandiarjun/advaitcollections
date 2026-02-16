@@ -332,6 +332,15 @@ function AdminNavbar() {
               </Link>
 
               <Link 
+                to="/admin-dashboard/all-products"
+                className={`nav-link-admin ${isActive('/admin-dashboard/all-products') ? 'active' : ''}`}
+                title="All Products"
+              >
+                <i className="bi bi-boxes"></i>
+                Products
+              </Link>
+
+              <Link 
                 to="/admin-dashboard/add-product"
                 className={`nav-link-admin ${isActive('/admin-dashboard/add-product') ? 'active' : ''}`}
                 title="Add Product"
@@ -348,8 +357,6 @@ function AdminNavbar() {
                 <i className="bi bi-cart-check"></i>
                 Sale
               </Link>
-
-              
 
               <Link 
                 to="/admin-dashboard/sales-report"
@@ -404,6 +411,15 @@ function AdminNavbar() {
                 </Link>
 
                 <Link 
+                  to="/admin-dashboard/all-products"
+                  className={`nav-link-admin ${isActive('/admin-dashboard/all-products') ? 'active' : ''}`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <i className="bi bi-boxes"></i>
+                  All Products
+                </Link>
+
+                <Link 
                   to="/admin-dashboard/add-product"
                   className={`nav-link-admin ${isActive('/admin-dashboard/add-product') ? 'active' : ''}`}
                   onClick={() => setIsMobileMenuOpen(false)}
@@ -420,8 +436,6 @@ function AdminNavbar() {
                   <i className="bi bi-cart-check"></i>
                   New Sale
                 </Link>
-
-                
 
                 <Link 
                   to="/admin-dashboard/sales-report"

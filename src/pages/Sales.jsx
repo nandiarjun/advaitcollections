@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { productsAPI, salesAPI } from "../services/api";
 import "./Sales.css";
 
 function Sales() {
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState("");
   const [quantitySold, setQuantitySold] = useState("");
@@ -179,8 +181,31 @@ function Sales() {
     return Number(customSellingPrice) !== selectedProductDetails.sellingRate;
   };
 
+  const goToSalesReport = () => {
+    navigate('/admin-dashboard/sales-report');
+  };
+
   return (
     <div className="sls-container">
+      {/* Header with Report Button */}
+      <div className="sls-page-header">
+        <div className="sls-header-left">
+          <h1 className="sls-page-title">
+            <i className="bi bi-cart-check"></i>
+            Sales Counter
+          </h1>
+          <p className="sls-page-subtitle">Process customer purchases and track transactions</p>
+        </div>
+        <button 
+          className="sls-report-btn"
+          onClick={goToSalesReport}
+          title="View Sales Report"
+        >
+          <i className="bi bi-bar-chart-line"></i>
+          <span>View Report</span>
+        </button>
+      </div>
+
       <div className="sls-grid">
         {/* Left Column - New Sale Form */}
         <div className="sls-card">
@@ -189,6 +214,9 @@ function Sales() {
               <i className="bi bi-cart-plus"></i>
               New Sale Transaction
             </h5>
+            <Link to="/admin-dashboard/sales-report" className="sls-card-report-link">
+              <i className="bi bi-bar-chart"></i>
+            </Link>
           </div>
           <div className="sls-card-body">
             {/* Alert Messages */}
@@ -429,7 +457,16 @@ function Sales() {
               <i className="bi bi-clock-history sls-primary-icon"></i>
               <h5>Recent Transactions</h5>
             </div>
-            <span className="sls-badge">{recentSales.length} sales</span>
+            <div className="sls-transactions-actions">
+              <span className="sls-badge">{recentSales.length} sales</span>
+              <button 
+                className="sls-header-report-btn"
+                onClick={goToSalesReport}
+                title="View Full Report"
+              >
+                <i className="bi bi-bar-chart"></i>
+              </button>
+            </div>
           </div>
           <div className="sls-transactions-list">
             {recentSales.length > 0 ? (
@@ -493,6 +530,17 @@ function Sales() {
               </div>
             )}
           </div>
+          
+          {/* View All Report Link at Bottom */}
+          {recentSales.length > 0 && (
+            <div className="sls-view-all-link">
+              <Link to="/admin-dashboard/sales-report" className="sls-view-report-link">
+                <i className="bi bi-bar-chart-line"></i>
+                View Complete Sales Report
+                <i className="bi bi-arrow-right"></i>
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </div>
