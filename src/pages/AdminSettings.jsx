@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { settingsAPI } from "../services/api";
 import { useNavigate } from "react-router-dom";
+import "./AdminSettings.css";
 
 function AdminSettings() {
   const navigate = useNavigate();
@@ -69,7 +70,6 @@ function AdminSettings() {
     try {
       setLoading(true);
       
-      // Check if token exists
       if (!token) {
         showMessage("error", "Please login again");
         navigate("/admin-login");
@@ -82,7 +82,6 @@ function AdminSettings() {
         const data = res.settings;
         setSettings(data);
         
-        // Initialize form states
         setBusinessInfo({
           businessName: data.businessName || "",
           tagline: data.tagline || "",
@@ -104,7 +103,6 @@ function AdminSettings() {
     } catch (error) {
       console.error("Fetch Settings Error:", error);
       
-      // Handle 401 Unauthorized error
       if (error.response?.status === 401) {
         showMessage("error", "Session expired. Please login again.");
         localStorage.removeItem("adminToken");
@@ -128,13 +126,11 @@ function AdminSettings() {
       return;
     }
 
-    // Check if file is an image
     if (!file.type.startsWith('image/')) {
       showMessage("error", "Please select an image file (JPEG, PNG, GIF, etc.)");
       return;
     }
 
-    // Check token
     if (!token) {
       showMessage("error", "Please login again");
       navigate("/admin-login");
@@ -160,7 +156,6 @@ function AdminSettings() {
       } else if (type === 'team' && uploadFor !== null) {
         response = await settingsAPI.uploadTeamImage(file, uploadFor, token);
         if (response.success) {
-          // Update the team member's image in the aboutContent
           const updatedTeamMembers = [...aboutContent.teamMembers];
           updatedTeamMembers[uploadFor].image = response.image;
           setAboutContent({...aboutContent, teamMembers: updatedTeamMembers});
@@ -257,7 +252,7 @@ function AdminSettings() {
 
       if (response.success) {
         showMessage("success", response.message);
-        fetchSettings(); // Refresh data
+        fetchSettings();
       }
     } catch (error) {
       console.error("Save Error:", error);
@@ -510,106 +505,119 @@ function AdminSettings() {
 
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "100vh" }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
+      <div className="aset-loading">
+        <div className="aset-spinner"></div>
       </div>
     );
   }
 
   return (
-    <div className="container-fluid py-4">
-      <div className="row">
-        <div className="col-12">
-          <h2 className="fw-bold mb-4">
-            <i className="bi bi-gear-fill me-2"></i>
-            Admin Settings
-          </h2>
+    <div className="aset-container">
+      <div className="aset-row">
+        <div className="aset-col-12">
+          <div className="aset-header">
+            <h1 className="aset-title">
+              <i className="bi bi-gear-fill aset-title-icon"></i>
+              Admin Settings
+            </h1>
+          </div>
 
           {/* Message Alert */}
           {message.text && (
-            <div className={`alert alert-${message.type} alert-dismissible fade show`} role="alert">
-              {message.text}
-              <button type="button" className="btn-close" onClick={() => setMessage({ type: "", text: "" })}></button>
+            <div className={`aset-alert aset-alert-${message.type}`}>
+              <div className="aset-alert-content">
+                <i className={`bi ${message.type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'} aset-alert-icon`}></i>
+                <span>{message.text}</span>
+              </div>
+              <button className="aset-alert-close" onClick={() => setMessage({ type: "", text: "" })}>
+                <i className="bi bi-x"></i>
+              </button>
             </div>
           )}
 
           {/* Tabs */}
-          <ul className="nav nav-tabs mb-4">
-            <li className="nav-item">
-              <button className={`nav-link ${activeTab === 'business' ? 'active fw-bold' : ''}`} onClick={() => setActiveTab('business')}>
-                <i className="bi bi-building me-2"></i>
-                Business Info
-              </button>
-            </li>
-            <li className="nav-item">
-              <button className={`nav-link ${activeTab === 'contact' ? 'active fw-bold' : ''}`} onClick={() => setActiveTab('contact')}>
-                <i className="bi bi-telephone me-2"></i>
-                Contact
-              </button>
-            </li>
-            <li className="nav-item">
-              <button className={`nav-link ${activeTab === 'social' ? 'active fw-bold' : ''}`} onClick={() => setActiveTab('social')}>
-                <i className="bi bi-share me-2"></i>
-                Social Media
-              </button>
-            </li>
-            <li className="nav-item">
-              <button className={`nav-link ${activeTab === 'hours' ? 'active fw-bold' : ''}`} onClick={() => setActiveTab('hours')}>
-                <i className="bi bi-clock me-2"></i>
-                Business Hours
-              </button>
-            </li>
-            <li className="nav-item">
-              <button className={`nav-link ${activeTab === 'about' ? 'active fw-bold' : ''}`} onClick={() => setActiveTab('about')}>
-                <i className="bi bi-info-circle me-2"></i>
-                About Page
-              </button>
-            </li>
-            <li className="nav-item">
-              <button className={`nav-link ${activeTab === 'seo' ? 'active fw-bold' : ''}`} onClick={() => setActiveTab('seo')}>
-                <i className="bi bi-search me-2"></i>
-                SEO
-              </button>
-            </li>
-            <li className="nav-item">
-              <button className={`nav-link ${activeTab === 'theme' ? 'active fw-bold' : ''}`} onClick={() => setActiveTab('theme')}>
-                <i className="bi bi-palette me-2"></i>
-                Theme
-              </button>
-            </li>
-            <li className="nav-item">
-              <button className={`nav-link ${activeTab === 'footer' ? 'active fw-bold' : ''}`} onClick={() => setActiveTab('footer')}>
-                <i className="bi bi-layout-text-window me-2"></i>
-                Footer
-              </button>
-            </li>
-          </ul>
+          <div className="aset-tabs">
+            <button 
+              className={`aset-tab ${activeTab === 'business' ? 'aset-tab-active' : ''}`}
+              onClick={() => setActiveTab('business')}
+            >
+              <i className="bi bi-building"></i>
+              Business Info
+            </button>
+            <button 
+              className={`aset-tab ${activeTab === 'contact' ? 'aset-tab-active' : ''}`}
+              onClick={() => setActiveTab('contact')}
+            >
+              <i className="bi bi-telephone"></i>
+              Contact
+            </button>
+            <button 
+              className={`aset-tab ${activeTab === 'social' ? 'aset-tab-active' : ''}`}
+              onClick={() => setActiveTab('social')}
+            >
+              <i className="bi bi-share"></i>
+              Social Media
+            </button>
+            <button 
+              className={`aset-tab ${activeTab === 'hours' ? 'aset-tab-active' : ''}`}
+              onClick={() => setActiveTab('hours')}
+            >
+              <i className="bi bi-clock"></i>
+              Business Hours
+            </button>
+            <button 
+              className={`aset-tab ${activeTab === 'about' ? 'aset-tab-active' : ''}`}
+              onClick={() => setActiveTab('about')}
+            >
+              <i className="bi bi-info-circle"></i>
+              About Page
+            </button>
+            <button 
+              className={`aset-tab ${activeTab === 'seo' ? 'aset-tab-active' : ''}`}
+              onClick={() => setActiveTab('seo')}
+            >
+              <i className="bi bi-search"></i>
+              SEO
+            </button>
+            <button 
+              className={`aset-tab ${activeTab === 'theme' ? 'aset-tab-active' : ''}`}
+              onClick={() => setActiveTab('theme')}
+            >
+              <i className="bi bi-palette"></i>
+              Theme
+            </button>
+            <button 
+              className={`aset-tab ${activeTab === 'footer' ? 'aset-tab-active' : ''}`}
+              onClick={() => setActiveTab('footer')}
+            >
+              <i className="bi bi-layout-text-window"></i>
+              Footer
+            </button>
+          </div>
 
           {/* Tab Content */}
-          <div className="tab-content">
+          <div className="aset-tab-content">
             {/* Business Info Tab */}
             {activeTab === 'business' && (
-              <div className="card shadow">
-                <div className="card-header bg-primary text-white">
-                  <h5 className="mb-0">
-                    <i className="bi bi-building me-2"></i>
+              <div className="aset-card">
+                <div className="aset-card-header">
+                  <h5 className="aset-card-title">
+                    <i className="bi bi-building"></i>
                     Business Information
                   </h5>
                 </div>
-                <div className="card-body">
+                <div className="aset-card-body">
                   {/* Logo Upload Section */}
-                  <div className="row mb-4">
-                    <div className="col-md-6">
-                      <label className="form-label fw-bold">Logo</label>
-                      <div className="border rounded p-3 text-center">
+                  <div className="aset-row-flex aset-mb-4">
+                    <div className="aset-col-md-6">
+                      <label className="aset-label">Logo</label>
+                      <div className="aset-upload-area">
                         {logo.url ? (
-                          <div className="mb-3">
-                            <img src={logo.url} alt="Logo" style={{ maxHeight: "150px", maxWidth: "100%" }} className="mb-2" />
-                            <div>
+                          <div className="aset-image-preview">
+                            <img src={logo.url} alt="Logo" className="aset-image" />
+                            <div className="aset-d-flex aset-justify-center">
                               <button 
-                                className="btn btn-sm btn-danger me-2"
+                                className="aset-btn aset-btn-danger aset-btn-sm"
                                 onClick={() => handleDeleteImage('logo', logo.publicId)}
                                 disabled={uploading}
                               >
@@ -618,16 +626,16 @@ function AdminSettings() {
                             </div>
                           </div>
                         ) : (
-                          <div className="mb-3">
-                            <i className="bi bi-image text-muted" style={{ fontSize: "3rem" }}></i>
-                            <p className="text-muted mb-2">No logo uploaded</p>
+                          <div className="aset-image-preview">
+                            <i className="bi bi-image aset-upload-icon"></i>
+                            <p className="aset-upload-text">No logo uploaded</p>
                           </div>
                         )}
                         
-                        <div className="mt-2">
+                        <div className="aset-mt-2">
                           <input
                             type="file"
-                            className="form-control mb-2"
+                            className="aset-input"
                             accept="image/*"
                             onChange={(e) => {
                               if (e.target.files[0]) {
@@ -636,20 +644,20 @@ function AdminSettings() {
                             }}
                             disabled={uploading}
                           />
-                          <small className="text-muted">Any image format accepted (JPG, PNG, GIF, etc.)</small>
+                          <small className="aset-text-muted">Any image format accepted</small>
                         </div>
                       </div>
                     </div>
 
-                    <div className="col-md-6">
-                      <label className="form-label fw-bold">Favicon</label>
-                      <div className="border rounded p-3 text-center">
+                    <div className="aset-col-md-6">
+                      <label className="aset-label">Favicon</label>
+                      <div className="aset-upload-area">
                         {favicon.url ? (
-                          <div className="mb-3">
-                            <img src={favicon.url} alt="Favicon" style={{ maxHeight: "64px", maxWidth: "100%" }} className="mb-2" />
-                            <div>
+                          <div className="aset-image-preview">
+                            <img src={favicon.url} alt="Favicon" className="aset-image aset-image-small" />
+                            <div className="aset-d-flex aset-justify-center">
                               <button 
-                                className="btn btn-sm btn-danger me-2"
+                                className="aset-btn aset-btn-danger aset-btn-sm"
                                 onClick={() => handleDeleteImage('favicon', favicon.publicId)}
                                 disabled={uploading}
                               >
@@ -658,16 +666,16 @@ function AdminSettings() {
                             </div>
                           </div>
                         ) : (
-                          <div className="mb-3">
-                            <i className="bi bi-image text-muted" style={{ fontSize: "2rem" }}></i>
-                            <p className="text-muted mb-2">No favicon uploaded</p>
+                          <div className="aset-image-preview">
+                            <i className="bi bi-image aset-upload-icon" style={{ fontSize: "2rem" }}></i>
+                            <p className="aset-upload-text">No favicon uploaded</p>
                           </div>
                         )}
                         
-                        <div className="mt-2">
+                        <div className="aset-mt-2">
                           <input
                             type="file"
-                            className="form-control mb-2"
+                            className="aset-input"
                             accept="image/*"
                             onChange={(e) => {
                               if (e.target.files[0]) {
@@ -676,7 +684,7 @@ function AdminSettings() {
                             }}
                             disabled={uploading}
                           />
-                          <small className="text-muted">Any image format accepted</small>
+                          <small className="aset-text-muted">Any image format accepted</small>
                         </div>
                       </div>
                     </div>
@@ -686,47 +694,51 @@ function AdminSettings() {
                     e.preventDefault();
                     handleSave("business", businessInfo);
                   }}>
-                    <div className="row">
-                      <div className="col-md-6 mb-3">
-                        <label className="form-label fw-bold">Business Name *</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          value={businessInfo.businessName}
-                          onChange={(e) => setBusinessInfo({...businessInfo, businessName: e.target.value})}
-                          required
-                        />
+                    <div className="aset-row-flex">
+                      <div className="aset-col-md-6">
+                        <div className="aset-form-group">
+                          <label className="aset-label">Business Name *</label>
+                          <input
+                            type="text"
+                            className="aset-input"
+                            value={businessInfo.businessName}
+                            onChange={(e) => setBusinessInfo({...businessInfo, businessName: e.target.value})}
+                            required
+                          />
+                        </div>
                       </div>
-                      <div className="col-md-6 mb-3">
-                        <label className="form-label fw-bold">Tagline</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          value={businessInfo.tagline}
-                          onChange={(e) => setBusinessInfo({...businessInfo, tagline: e.target.value})}
-                        />
+                      <div className="aset-col-md-6">
+                        <div className="aset-form-group">
+                          <label className="aset-label">Tagline</label>
+                          <input
+                            type="text"
+                            className="aset-input"
+                            value={businessInfo.tagline}
+                            onChange={(e) => setBusinessInfo({...businessInfo, tagline: e.target.value})}
+                          />
+                        </div>
                       </div>
                     </div>
 
-                    <div className="mb-3">
-                      <label className="form-label fw-bold">Description</label>
+                    <div className="aset-form-group">
+                      <label className="aset-label">Description</label>
                       <textarea
-                        className="form-control"
+                        className="aset-textarea"
                         rows="3"
                         value={businessInfo.description}
                         onChange={(e) => setBusinessInfo({...businessInfo, description: e.target.value})}
                       ></textarea>
                     </div>
 
-                    <button type="submit" className="btn btn-primary" disabled={saving}>
+                    <button type="submit" className="aset-btn aset-btn-primary" disabled={saving}>
                       {saving ? (
                         <>
-                          <span className="spinner-border spinner-border-sm me-2"></span>
+                          <span className="aset-spinner-small"></span>
                           Saving...
                         </>
                       ) : (
                         <>
-                          <i className="bi bi-save me-2"></i>
+                          <i className="bi bi-save"></i>
                           Save Business Info
                         </>
                       )}
@@ -738,79 +750,87 @@ function AdminSettings() {
 
             {/* Contact Tab */}
             {activeTab === 'contact' && (
-              <div className="row">
-                <div className="col-md-6">
-                  <div className="card shadow mb-4">
-                    <div className="card-header bg-primary text-white">
-                      <h5 className="mb-0">
-                        <i className="bi bi-geo-alt me-2"></i>
+              <div className="aset-row-flex">
+                <div className="aset-col-md-6">
+                  <div className="aset-card aset-mb-4">
+                    <div className="aset-card-header">
+                      <h5 className="aset-card-title">
+                        <i className="bi bi-geo-alt"></i>
                         Address
                       </h5>
                     </div>
-                    <div className="card-body">
+                    <div className="aset-card-body">
                       <form onSubmit={(e) => {
                         e.preventDefault();
                         handleSave("contact", { address, phoneNumbers, emails });
                       }}>
-                        <div className="mb-3">
-                          <label className="form-label fw-bold">Street</label>
+                        <div className="aset-form-group">
+                          <label className="aset-label">Street</label>
                           <input
                             type="text"
-                            className="form-control"
+                            className="aset-input"
                             value={address.street || ""}
                             onChange={(e) => setAddress({...address, street: e.target.value})}
                           />
                         </div>
-                        <div className="row">
-                          <div className="col-md-6 mb-3">
-                            <label className="form-label fw-bold">City</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              value={address.city || ""}
-                              onChange={(e) => setAddress({...address, city: e.target.value})}
-                            />
+                        <div className="aset-row-flex">
+                          <div className="aset-col-md-6">
+                            <div className="aset-form-group">
+                              <label className="aset-label">City</label>
+                              <input
+                                type="text"
+                                className="aset-input"
+                                value={address.city || ""}
+                                onChange={(e) => setAddress({...address, city: e.target.value})}
+                              />
+                            </div>
                           </div>
-                          <div className="col-md-6 mb-3">
-                            <label className="form-label fw-bold">State</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              value={address.state || ""}
-                              onChange={(e) => setAddress({...address, state: e.target.value})}
-                            />
-                          </div>
-                        </div>
-                        <div className="row">
-                          <div className="col-md-6 mb-3">
-                            <label className="form-label fw-bold">Country</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              value={address.country || ""}
-                              onChange={(e) => setAddress({...address, country: e.target.value})}
-                            />
-                          </div>
-                          <div className="col-md-6 mb-3">
-                            <label className="form-label fw-bold">Pincode</label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              value={address.pincode || ""}
-                              onChange={(e) => setAddress({...address, pincode: e.target.value})}
-                            />
+                          <div className="aset-col-md-6">
+                            <div className="aset-form-group">
+                              <label className="aset-label">State</label>
+                              <input
+                                type="text"
+                                className="aset-input"
+                                value={address.state || ""}
+                                onChange={(e) => setAddress({...address, state: e.target.value})}
+                              />
+                            </div>
                           </div>
                         </div>
-                        <div className="mb-3">
-                          <label className="form-label fw-bold">Full Address (Display)</label>
+                        <div className="aset-row-flex">
+                          <div className="aset-col-md-6">
+                            <div className="aset-form-group">
+                              <label className="aset-label">Country</label>
+                              <input
+                                type="text"
+                                className="aset-input"
+                                value={address.country || ""}
+                                onChange={(e) => setAddress({...address, country: e.target.value})}
+                              />
+                            </div>
+                          </div>
+                          <div className="aset-col-md-6">
+                            <div className="aset-form-group">
+                              <label className="aset-label">Pincode</label>
+                              <input
+                                type="text"
+                                className="aset-input"
+                                value={address.pincode || ""}
+                                onChange={(e) => setAddress({...address, pincode: e.target.value})}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="aset-form-group">
+                          <label className="aset-label">Full Address (Display)</label>
                           <textarea
-                            className="form-control"
+                            className="aset-textarea"
                             rows="2"
                             value={address.fullAddress || ""}
                             onChange={(e) => setAddress({...address, fullAddress: e.target.value})}
                           ></textarea>
                         </div>
-                        <button type="submit" className="btn btn-primary" disabled={saving}>
+                        <button type="submit" className="aset-btn aset-btn-primary" disabled={saving}>
                           {saving ? "Saving..." : "Save Address"}
                         </button>
                       </form>
@@ -818,26 +838,26 @@ function AdminSettings() {
                   </div>
                 </div>
 
-                <div className="col-md-6">
+                <div className="aset-col-md-6">
                   {/* Phone Numbers */}
-                  <div className="card shadow mb-4">
-                    <div className="card-header bg-success text-white">
-                      <h5 className="mb-0">
-                        <i className="bi bi-telephone me-2"></i>
+                  <div className="aset-card aset-mb-4">
+                    <div className="aset-card-header aset-card-header-success">
+                      <h5 className="aset-card-title">
+                        <i className="bi bi-telephone"></i>
                         Phone Numbers
                       </h5>
                     </div>
-                    <div className="card-body">
-                      <div className="mb-3">
+                    <div className="aset-card-body">
+                      <div className="aset-mb-3">
                         {phoneNumbers.map((phone, index) => (
-                          <div key={index} className="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
-                            <div>
-                              <span className="badge bg-info me-2">{phone.type}</span>
+                          <div key={index} className="aset-list-item">
+                            <div className="aset-list-item-content">
+                              <span className="aset-badge aset-badge-info">{phone.type}</span>
                               <span>{phone.number}</span>
-                              {phone.isPrimary && <span className="badge bg-warning ms-2">Primary</span>}
+                              {phone.isPrimary && <span className="aset-badge aset-badge-warning">Primary</span>}
                             </div>
                             <button
-                              className="btn btn-sm btn-danger"
+                              className="aset-btn aset-btn-outline-danger aset-btn-sm"
                               onClick={() => removePhone(index)}
                             >
                               <i className="bi bi-trash"></i>
@@ -846,11 +866,11 @@ function AdminSettings() {
                         ))}
                       </div>
 
-                      <h6 className="fw-bold mb-2">Add New Phone</h6>
-                      <div className="row g-2">
-                        <div className="col-md-4">
+                      <h6 className="aset-label">Add New Phone</h6>
+                      <div className="aset-row-flex aset-gap-2">
+                        <div className="aset-col-md-4">
                           <select
-                            className="form-select"
+                            className="aset-select"
                             value={newPhone.type}
                             onChange={(e) => setNewPhone({...newPhone, type: e.target.value})}
                           >
@@ -859,30 +879,30 @@ function AdminSettings() {
                             <option value="support">Support</option>
                           </select>
                         </div>
-                        <div className="col-md-5">
+                        <div className="aset-col-md-5">
                           <input
                             type="text"
-                            className="form-control"
+                            className="aset-input"
                             placeholder="Phone number"
                             value={newPhone.number}
                             onChange={(e) => setNewPhone({...newPhone, number: e.target.value})}
                           />
                         </div>
-                        <div className="col-md-3">
-                          <button className="btn btn-success w-100" onClick={addPhone}>
+                        <div className="aset-col-md-3">
+                          <button className="aset-btn aset-btn-success aset-btn-block" onClick={addPhone}>
                             <i className="bi bi-plus"></i> Add
                           </button>
                         </div>
                       </div>
-                      <div className="form-check mt-2">
+                      <div className="aset-checkbox">
                         <input
                           type="checkbox"
-                          className="form-check-input"
+                          className="aset-checkbox-input"
                           id="primaryPhone"
                           checked={newPhone.isPrimary}
                           onChange={(e) => setNewPhone({...newPhone, isPrimary: e.target.checked})}
                         />
-                        <label className="form-check-label" htmlFor="primaryPhone">
+                        <label className="aset-checkbox-label" htmlFor="primaryPhone">
                           Set as primary
                         </label>
                       </div>
@@ -890,24 +910,24 @@ function AdminSettings() {
                   </div>
 
                   {/* Emails */}
-                  <div className="card shadow">
-                    <div className="card-header bg-info text-white">
-                      <h5 className="mb-0">
-                        <i className="bi bi-envelope me-2"></i>
+                  <div className="aset-card">
+                    <div className="aset-card-header aset-card-header-info">
+                      <h5 className="aset-card-title">
+                        <i className="bi bi-envelope"></i>
                         Email Addresses
                       </h5>
                     </div>
-                    <div className="card-body">
-                      <div className="mb-3">
+                    <div className="aset-card-body">
+                      <div className="aset-mb-3">
                         {emails.map((email, index) => (
-                          <div key={index} className="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
-                            <div>
-                              <span className="badge bg-info me-2">{email.type}</span>
+                          <div key={index} className="aset-list-item">
+                            <div className="aset-list-item-content">
+                              <span className="aset-badge aset-badge-info">{email.type}</span>
                               <span>{email.email}</span>
-                              {email.isPrimary && <span className="badge bg-warning ms-2">Primary</span>}
+                              {email.isPrimary && <span className="aset-badge aset-badge-warning">Primary</span>}
                             </div>
                             <button
-                              className="btn btn-sm btn-danger"
+                              className="aset-btn aset-btn-outline-danger aset-btn-sm"
                               onClick={() => removeEmail(index)}
                             >
                               <i className="bi bi-trash"></i>
@@ -916,11 +936,11 @@ function AdminSettings() {
                         ))}
                       </div>
 
-                      <h6 className="fw-bold mb-2">Add New Email</h6>
-                      <div className="row g-2">
-                        <div className="col-md-4">
+                      <h6 className="aset-label">Add New Email</h6>
+                      <div className="aset-row-flex aset-gap-2">
+                        <div className="aset-col-md-4">
                           <select
-                            className="form-select"
+                            className="aset-select"
                             value={newEmail.type}
                             onChange={(e) => setNewEmail({...newEmail, type: e.target.value})}
                           >
@@ -929,30 +949,30 @@ function AdminSettings() {
                             <option value="info">Info</option>
                           </select>
                         </div>
-                        <div className="col-md-5">
+                        <div className="aset-col-md-5">
                           <input
                             type="email"
-                            className="form-control"
+                            className="aset-input"
                             placeholder="Email address"
                             value={newEmail.email}
                             onChange={(e) => setNewEmail({...newEmail, email: e.target.value})}
                           />
                         </div>
-                        <div className="col-md-3">
-                          <button className="btn btn-info text-white w-100" onClick={addEmail}>
+                        <div className="aset-col-md-3">
+                          <button className="aset-btn aset-btn-info aset-btn-block" onClick={addEmail}>
                             <i className="bi bi-plus"></i> Add
                           </button>
                         </div>
                       </div>
-                      <div className="form-check mt-2">
+                      <div className="aset-checkbox">
                         <input
                           type="checkbox"
-                          className="form-check-input"
+                          className="aset-checkbox-input"
                           id="primaryEmail"
                           checked={newEmail.isPrimary}
                           onChange={(e) => setNewEmail({...newEmail, isPrimary: e.target.checked})}
                         />
-                        <label className="form-check-label" htmlFor="primaryEmail">
+                        <label className="aset-checkbox-label" htmlFor="primaryEmail">
                           Set as primary
                         </label>
                       </div>
@@ -964,120 +984,125 @@ function AdminSettings() {
 
             {/* Social Media Tab */}
             {activeTab === 'social' && (
-              <div className="card shadow">
-                <div className="card-header bg-primary text-white">
-                  <h5 className="mb-0">
-                    <i className="bi bi-share me-2"></i>
+              <div className="aset-card">
+                <div className="aset-card-header">
+                  <h5 className="aset-card-title">
+                    <i className="bi bi-share"></i>
                     Social Media Links
                   </h5>
                 </div>
-                <div className="card-body">
+                <div className="aset-card-body">
                   <form onSubmit={(e) => {
                     e.preventDefault();
                     handleSave("social", { socialMedia });
                   }}>
-                    <div className="row">
-                      <div className="col-md-6 mb-3">
-                        <label className="form-label fw-bold">
-                          <i className="bi bi-facebook text-primary me-2"></i>
-                          Facebook
-                        </label>
-                        <input
-                          type="url"
-                          className="form-control"
-                          value={socialMedia.facebook || ""}
-                          onChange={(e) => setSocialMedia({...socialMedia, facebook: e.target.value})}
-                          placeholder="https://facebook.com/..."
-                        />
+                    <div className="aset-row-flex">
+                      <div className="aset-col-md-6">
+                        <div className="aset-form-group">
+                          <label className="aset-label">
+                            <i className="bi bi-facebook aset-text-primary"></i> Facebook
+                          </label>
+                          <input
+                            type="url"
+                            className="aset-input"
+                            value={socialMedia.facebook || ""}
+                            onChange={(e) => setSocialMedia({...socialMedia, facebook: e.target.value})}
+                            placeholder="https://facebook.com/..."
+                          />
+                        </div>
                       </div>
-                      <div className="col-md-6 mb-3">
-                        <label className="form-label fw-bold">
-                          <i className="bi bi-instagram text-danger me-2"></i>
-                          Instagram
-                        </label>
-                        <input
-                          type="url"
-                          className="form-control"
-                          value={socialMedia.instagram || ""}
-                          onChange={(e) => setSocialMedia({...socialMedia, instagram: e.target.value})}
-                          placeholder="https://instagram.com/..."
-                        />
-                      </div>
-                    </div>
-
-                    <div className="row">
-                      <div className="col-md-6 mb-3">
-                        <label className="form-label fw-bold">
-                          <i className="bi bi-twitter-x text-dark me-2"></i>
-                          Twitter/X
-                        </label>
-                        <input
-                          type="url"
-                          className="form-control"
-                          value={socialMedia.twitter || ""}
-                          onChange={(e) => setSocialMedia({...socialMedia, twitter: e.target.value})}
-                          placeholder="https://twitter.com/..."
-                        />
-                      </div>
-                      <div className="col-md-6 mb-3">
-                        <label className="form-label fw-bold">
-                          <i className="bi bi-youtube text-danger me-2"></i>
-                          YouTube
-                        </label>
-                        <input
-                          type="url"
-                          className="form-control"
-                          value={socialMedia.youtube || ""}
-                          onChange={(e) => setSocialMedia({...socialMedia, youtube: e.target.value})}
-                          placeholder="https://youtube.com/..."
-                        />
+                      <div className="aset-col-md-6">
+                        <div className="aset-form-group">
+                          <label className="aset-label">
+                            <i className="bi bi-instagram aset-text-danger"></i> Instagram
+                          </label>
+                          <input
+                            type="url"
+                            className="aset-input"
+                            value={socialMedia.instagram || ""}
+                            onChange={(e) => setSocialMedia({...socialMedia, instagram: e.target.value})}
+                            placeholder="https://instagram.com/..."
+                          />
+                        </div>
                       </div>
                     </div>
 
-                    <div className="row">
-                      <div className="col-md-6 mb-3">
-                        <label className="form-label fw-bold">
-                          <i className="bi bi-linkedin text-primary me-2"></i>
-                          LinkedIn
-                        </label>
-                        <input
-                          type="url"
-                          className="form-control"
-                          value={socialMedia.linkedin || ""}
-                          onChange={(e) => setSocialMedia({...socialMedia, linkedin: e.target.value})}
-                          placeholder="https://linkedin.com/..."
-                        />
+                    <div className="aset-row-flex">
+                      <div className="aset-col-md-6">
+                        <div className="aset-form-group">
+                          <label className="aset-label">
+                            <i className="bi bi-twitter-x"></i> Twitter/X
+                          </label>
+                          <input
+                            type="url"
+                            className="aset-input"
+                            value={socialMedia.twitter || ""}
+                            onChange={(e) => setSocialMedia({...socialMedia, twitter: e.target.value})}
+                            placeholder="https://twitter.com/..."
+                          />
+                        </div>
                       </div>
-                      <div className="col-md-6 mb-3">
-                        <label className="form-label fw-bold">
-                          <i className="bi bi-whatsapp text-success me-2"></i>
-                          WhatsApp
-                        </label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          value={socialMedia.whatsapp || ""}
-                          onChange={(e) => setSocialMedia({...socialMedia, whatsapp: e.target.value})}
-                          placeholder="https://wa.me/1234567890"
-                        />
+                      <div className="aset-col-md-6">
+                        <div className="aset-form-group">
+                          <label className="aset-label">
+                            <i className="bi bi-youtube aset-text-danger"></i> YouTube
+                          </label>
+                          <input
+                            type="url"
+                            className="aset-input"
+                            value={socialMedia.youtube || ""}
+                            onChange={(e) => setSocialMedia({...socialMedia, youtube: e.target.value})}
+                            placeholder="https://youtube.com/..."
+                          />
+                        </div>
                       </div>
                     </div>
 
-                    <div className="mb-3">
-                      <label className="form-label fw-bold">
-                        <i className="bi bi-pinterest text-danger me-2"></i>
-                        Pinterest
+                    <div className="aset-row-flex">
+                      <div className="aset-col-md-6">
+                        <div className="aset-form-group">
+                          <label className="aset-label">
+                            <i className="bi bi-linkedin aset-text-primary"></i> LinkedIn
+                          </label>
+                          <input
+                            type="url"
+                            className="aset-input"
+                            value={socialMedia.linkedin || ""}
+                            onChange={(e) => setSocialMedia({...socialMedia, linkedin: e.target.value})}
+                            placeholder="https://linkedin.com/..."
+                          />
+                        </div>
+                      </div>
+                      <div className="aset-col-md-6">
+                        <div className="aset-form-group">
+                          <label className="aset-label">
+                            <i className="bi bi-whatsapp aset-text-success"></i> WhatsApp
+                          </label>
+                          <input
+                            type="text"
+                            className="aset-input"
+                            value={socialMedia.whatsapp || ""}
+                            onChange={(e) => setSocialMedia({...socialMedia, whatsapp: e.target.value})}
+                            placeholder="https://wa.me/1234567890"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="aset-form-group">
+                      <label className="aset-label">
+                        <i className="bi bi-pinterest aset-text-danger"></i> Pinterest
                       </label>
                       <input
                         type="url"
-                        className="form-control"
+                        className="aset-input"
                         value={socialMedia.pinterest || ""}
                         onChange={(e) => setSocialMedia({...socialMedia, pinterest: e.target.value})}
                         placeholder="https://pinterest.com/..."
                       />
                     </div>
 
-                    <button type="submit" className="btn btn-primary" disabled={saving}>
+                    <button type="submit" className="aset-btn aset-btn-primary" disabled={saving}>
                       {saving ? "Saving..." : "Save Social Media Links"}
                     </button>
                   </form>
@@ -1087,28 +1112,28 @@ function AdminSettings() {
 
             {/* Business Hours Tab */}
             {activeTab === 'hours' && (
-              <div className="card shadow">
-                <div className="card-header bg-primary text-white">
-                  <h5 className="mb-0">
-                    <i className="bi bi-clock me-2"></i>
+              <div className="aset-card">
+                <div className="aset-card-header">
+                  <h5 className="aset-card-title">
+                    <i className="bi bi-clock"></i>
                     Business Hours
                   </h5>
                 </div>
-                <div className="card-body">
+                <div className="aset-card-body">
                   <form onSubmit={(e) => {
                     e.preventDefault();
                     handleSave("hours", { businessHours });
                   }}>
                     {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day) => (
-                      <div key={day} className="row mb-3 align-items-center">
-                        <div className="col-md-2">
-                          <label className="fw-bold text-capitalize">{day}</label>
+                      <div key={day} className="aset-hours-row">
+                        <div className="aset-hours-day">
+                          <label className="aset-label aset-mb-0">{day}</label>
                         </div>
-                        <div className="col-md-2">
-                          <div className="form-check">
+                        <div className="aset-hours-checkbox">
+                          <div className="aset-checkbox">
                             <input
                               type="checkbox"
-                              className="form-check-input"
+                              className="aset-checkbox-input"
                               id={`${day}Closed`}
                               checked={businessHours[day]?.closed || false}
                               onChange={(e) => setBusinessHours({
@@ -1116,17 +1141,15 @@ function AdminSettings() {
                                 [day]: { ...businessHours[day], closed: e.target.checked }
                               })}
                             />
-                            <label className="form-check-label" htmlFor={`${day}Closed`}>
-                              Closed
-                            </label>
+                            <label className="aset-checkbox-label" htmlFor={`${day}Closed`}>Closed</label>
                           </div>
                         </div>
                         {!businessHours[day]?.closed && (
                           <>
-                            <div className="col-md-3">
+                            <div className="aset-hours-time">
                               <input
                                 type="time"
-                                className="form-control"
+                                className="aset-input"
                                 value={businessHours[day]?.open || "10:00"}
                                 onChange={(e) => setBusinessHours({
                                   ...businessHours,
@@ -1134,11 +1157,11 @@ function AdminSettings() {
                                 })}
                               />
                             </div>
-                            <div className="col-md-1 text-center">to</div>
-                            <div className="col-md-3">
+                            <div className="aset-hours-separator">to</div>
+                            <div className="aset-hours-time">
                               <input
                                 type="time"
-                                className="form-control"
+                                className="aset-input"
                                 value={businessHours[day]?.close || "20:00"}
                                 onChange={(e) => setBusinessHours({
                                   ...businessHours,
@@ -1151,7 +1174,7 @@ function AdminSettings() {
                       </div>
                     ))}
 
-                    <button type="submit" className="btn btn-primary" disabled={saving}>
+                    <button type="submit" className="aset-btn aset-btn-primary" disabled={saving}>
                       {saving ? "Saving..." : "Save Business Hours"}
                     </button>
                   </form>
@@ -1161,62 +1184,66 @@ function AdminSettings() {
 
             {/* About Page Tab */}
             {activeTab === 'about' && (
-              <div className="row">
-                <div className="col-md-12">
-                  <div className="card shadow mb-4">
-                    <div className="card-header bg-primary text-white">
-                      <h5 className="mb-0">
-                        <i className="bi bi-info-circle me-2"></i>
+              <div className="aset-row-flex">
+                <div className="aset-col-12">
+                  <div className="aset-card aset-mb-4">
+                    <div className="aset-card-header">
+                      <h5 className="aset-card-title">
+                        <i className="bi bi-info-circle"></i>
                         About Page Content
                       </h5>
                     </div>
-                    <div className="card-body">
+                    <div className="aset-card-body">
                       <form onSubmit={(e) => {
                         e.preventDefault();
                         handleSave("about", aboutContent);
                       }}>
-                        <div className="mb-3">
-                          <label className="form-label fw-bold">Story</label>
+                        <div className="aset-form-group">
+                          <label className="aset-label">Story</label>
                           <textarea
-                            className="form-control"
+                            className="aset-textarea"
                             rows="4"
                             value={aboutContent.story || ""}
                             onChange={(e) => setAboutContent({...aboutContent, story: e.target.value})}
                           ></textarea>
                         </div>
 
-                        <div className="row">
-                          <div className="col-md-6 mb-3">
-                            <label className="form-label fw-bold">Vision</label>
-                            <textarea
-                              className="form-control"
-                              rows="3"
-                              value={aboutContent.vision || ""}
-                              onChange={(e) => setAboutContent({...aboutContent, vision: e.target.value})}
-                            ></textarea>
+                        <div className="aset-row-flex">
+                          <div className="aset-col-md-6">
+                            <div className="aset-form-group">
+                              <label className="aset-label">Vision</label>
+                              <textarea
+                                className="aset-textarea"
+                                rows="3"
+                                value={aboutContent.vision || ""}
+                                onChange={(e) => setAboutContent({...aboutContent, vision: e.target.value})}
+                              ></textarea>
+                            </div>
                           </div>
-                          <div className="col-md-6 mb-3">
-                            <label className="form-label fw-bold">Mission</label>
-                            <textarea
-                              className="form-control"
-                              rows="3"
-                              value={aboutContent.mission || ""}
-                              onChange={(e) => setAboutContent({...aboutContent, mission: e.target.value})}
-                            ></textarea>
+                          <div className="aset-col-md-6">
+                            <div className="aset-form-group">
+                              <label className="aset-label">Mission</label>
+                              <textarea
+                                className="aset-textarea"
+                                rows="3"
+                                value={aboutContent.mission || ""}
+                                onChange={(e) => setAboutContent({...aboutContent, mission: e.target.value})}
+                              ></textarea>
+                            </div>
                           </div>
                         </div>
 
-                        <div className="mb-3">
-                          <label className="form-label fw-bold">Founded Year</label>
+                        <div className="aset-form-group">
+                          <label className="aset-label">Founded Year</label>
                           <input
                             type="number"
-                            className="form-control"
+                            className="aset-input"
                             value={aboutContent.foundedYear || 2015}
                             onChange={(e) => setAboutContent({...aboutContent, foundedYear: parseInt(e.target.value)})}
                           />
                         </div>
 
-                        <button type="submit" className="btn btn-primary" disabled={saving}>
+                        <button type="submit" className="aset-btn aset-btn-primary" disabled={saving}>
                           {saving ? "Saving..." : "Save About Content"}
                         </button>
                       </form>
@@ -1224,98 +1251,100 @@ function AdminSettings() {
                   </div>
 
                   {/* Team Members */}
-                  <div className="card shadow mb-4">
-                    <div className="card-header bg-success text-white">
-                      <h5 className="mb-0">
-                        <i className="bi bi-people me-2"></i>
+                  <div className="aset-card aset-mb-4">
+                    <div className="aset-card-header aset-card-header-success">
+                      <h5 className="aset-card-title">
+                        <i className="bi bi-people"></i>
                         Team Members
                       </h5>
                     </div>
-                    <div className="card-body">
-                      <div className="row mb-4">
+                    <div className="aset-card-body">
+                      <div className="aset-team-grid">
                         {aboutContent.teamMembers?.map((member, index) => (
-                          <div key={index} className="col-md-4 mb-3">
-                            <div className="card h-100">
-                              {member.image?.url ? (
-                                <img 
-                                  src={member.image.url} 
-                                  className="card-img-top" 
-                                  alt={member.name} 
-                                  style={{ height: "150px", objectFit: "cover" }} 
-                                />
-                              ) : (
-                                <div className="bg-light text-center py-4">
-                                  <i className="bi bi-person-circle text-muted" style={{ fontSize: "3rem" }}></i>
-                                </div>
-                              )}
-                              <div className="card-body">
-                                <h6 className="fw-bold">{member.name}</h6>
-                                <p className="text-primary small">{member.position}</p>
-                                <p className="small text-muted">{member.bio}</p>
-                                
-                                <div className="d-flex gap-2">
-                                  <button
-                                    className="btn btn-sm btn-outline-primary"
-                                    onClick={() => {
-                                      setUploadFor(index);
-                                      document.getElementById('teamImageUpload').click();
-                                    }}
-                                  >
-                                    <i className="bi bi-upload"></i> Upload
-                                  </button>
-                                  <button
-                                    className="btn btn-sm btn-danger"
-                                    onClick={() => removeTeamMember(index)}
-                                  >
-                                    <i className="bi bi-trash"></i> Remove
-                                  </button>
-                                </div>
+                          <div key={index} className="aset-team-card">
+                            {member.image?.url ? (
+                              <img 
+                                src={member.image.url} 
+                                className="aset-team-image" 
+                                alt={member.name} 
+                              />
+                            ) : (
+                              <div className="aset-team-image-placeholder">
+                                <i className="bi bi-person-circle"></i>
+                              </div>
+                            )}
+                            <div className="aset-team-body">
+                              <h6 className="aset-team-name">{member.name}</h6>
+                              <p className="aset-team-position">{member.position}</p>
+                              <p className="aset-team-bio">{member.bio}</p>
+                              
+                              <div className="aset-team-actions">
+                                <button
+                                  className="aset-btn aset-btn-outline-primary aset-btn-sm"
+                                  onClick={() => {
+                                    setUploadFor(index);
+                                    document.getElementById('teamImageUpload').click();
+                                  }}
+                                >
+                                  <i className="bi bi-upload"></i> Upload
+                                </button>
+                                <button
+                                  className="aset-btn aset-btn-outline-danger aset-btn-sm"
+                                  onClick={() => removeTeamMember(index)}
+                                >
+                                  <i className="bi bi-trash"></i> Remove
+                                </button>
                               </div>
                             </div>
                           </div>
                         ))}
                       </div>
 
-                      <h6 className="fw-bold mb-3">Add New Team Member</h6>
-                      <div className="row">
-                        <div className="col-md-6 mb-3">
-                          <input
-                            type="text"
-                            className="form-control"
-                            placeholder="Name"
-                            value={newTeamMember.name}
-                            onChange={(e) => setNewTeamMember({...newTeamMember, name: e.target.value})}
-                          />
+                      <h6 className="aset-label">Add New Team Member</h6>
+                      <div className="aset-row-flex">
+                        <div className="aset-col-md-6">
+                          <div className="aset-form-group">
+                            <input
+                              type="text"
+                              className="aset-input"
+                              placeholder="Name"
+                              value={newTeamMember.name}
+                              onChange={(e) => setNewTeamMember({...newTeamMember, name: e.target.value})}
+                            />
+                          </div>
                         </div>
-                        <div className="col-md-6 mb-3">
-                          <input
-                            type="text"
-                            className="form-control"
-                            placeholder="Position"
-                            value={newTeamMember.position}
-                            onChange={(e) => setNewTeamMember({...newTeamMember, position: e.target.value})}
-                          />
+                        <div className="aset-col-md-6">
+                          <div className="aset-form-group">
+                            <input
+                              type="text"
+                              className="aset-input"
+                              placeholder="Position"
+                              value={newTeamMember.position}
+                              onChange={(e) => setNewTeamMember({...newTeamMember, position: e.target.value})}
+                            />
+                          </div>
                         </div>
-                        <div className="col-md-12 mb-3">
-                          <textarea
-                            className="form-control"
-                            placeholder="Bio"
-                            value={newTeamMember.bio}
-                            onChange={(e) => setNewTeamMember({...newTeamMember, bio: e.target.value})}
-                          ></textarea>
+                        <div className="aset-col-12">
+                          <div className="aset-form-group">
+                            <textarea
+                              className="aset-textarea"
+                              placeholder="Bio"
+                              value={newTeamMember.bio}
+                              onChange={(e) => setNewTeamMember({...newTeamMember, bio: e.target.value})}
+                            ></textarea>
+                          </div>
                         </div>
-                        <div className="col-12">
-                          <button className="btn btn-success" onClick={addTeamMember}>
+                        <div className="aset-col-12">
+                          <button className="aset-btn aset-btn-success" onClick={addTeamMember}>
                             <i className="bi bi-plus"></i> Add Team Member
                           </button>
                         </div>
                       </div>
 
-                      {/* Hidden file input for team member images */}
                       <input
                         type="file"
                         id="teamImageUpload"
-                        className="d-none"
+                        className="aset-d-none"
                         accept="image/*"
                         onChange={(e) => {
                           if (e.target.files[0] && uploadFor !== null) {
@@ -1327,67 +1356,71 @@ function AdminSettings() {
                   </div>
 
                   {/* Core Values */}
-                  <div className="card shadow">
-                    <div className="card-header bg-warning">
-                      <h5 className="mb-0">
-                        <i className="bi bi-star me-2"></i>
+                  <div className="aset-card">
+                    <div className="aset-card-header aset-card-header-warning">
+                      <h5 className="aset-card-title">
+                        <i className="bi bi-star"></i>
                         Core Values
                       </h5>
                     </div>
-                    <div className="card-body">
-                      <div className="row mb-4">
+                    <div className="aset-card-body">
+                      <div className="aset-value-grid">
                         {aboutContent.coreValues?.map((value, index) => (
-                          <div key={index} className="col-md-4 mb-3">
-                            <div className="card h-100">
-                              <div className="card-body">
-                                <h6 className="fw-bold">
-                                  {value.icon && <i className={`bi ${value.icon} me-2 text-warning`}></i>}
-                                  {value.title}
-                                </h6>
-                                <p className="small text-muted">{value.description}</p>
-                                <button
-                                  className="btn btn-sm btn-danger"
-                                  onClick={() => removeCoreValue(index)}
-                                >
-                                  <i className="bi bi-trash"></i> Remove
-                                </button>
-                              </div>
+                          <div key={index} className="aset-value-card">
+                            <div className="aset-card-body">
+                              <h6 className="aset-value-title">
+                                {value.icon && <i className={`bi ${value.icon} aset-value-icon`}></i>}
+                                {value.title}
+                              </h6>
+                              <p className="aset-value-description">{value.description}</p>
+                              <button
+                                className="aset-btn aset-btn-outline-danger aset-btn-sm"
+                                onClick={() => removeCoreValue(index)}
+                              >
+                                <i className="bi bi-trash"></i> Remove
+                              </button>
                             </div>
                           </div>
                         ))}
                       </div>
 
-                      <h6 className="fw-bold mb-3">Add New Core Value</h6>
-                      <div className="row">
-                        <div className="col-md-4 mb-3">
-                          <input
-                            type="text"
-                            className="form-control"
-                            placeholder="Title"
-                            value={newCoreValue.title}
-                            onChange={(e) => setNewCoreValue({...newCoreValue, title: e.target.value})}
-                          />
+                      <h6 className="aset-label">Add New Core Value</h6>
+                      <div className="aset-row-flex">
+                        <div className="aset-col-md-4">
+                          <div className="aset-form-group">
+                            <input
+                              type="text"
+                              className="aset-input"
+                              placeholder="Title"
+                              value={newCoreValue.title}
+                              onChange={(e) => setNewCoreValue({...newCoreValue, title: e.target.value})}
+                            />
+                          </div>
                         </div>
-                        <div className="col-md-4 mb-3">
-                          <input
-                            type="text"
-                            className="form-control"
-                            placeholder="Description"
-                            value={newCoreValue.description}
-                            onChange={(e) => setNewCoreValue({...newCoreValue, description: e.target.value})}
-                          />
+                        <div className="aset-col-md-4">
+                          <div className="aset-form-group">
+                            <input
+                              type="text"
+                              className="aset-input"
+                              placeholder="Description"
+                              value={newCoreValue.description}
+                              onChange={(e) => setNewCoreValue({...newCoreValue, description: e.target.value})}
+                            />
+                          </div>
                         </div>
-                        <div className="col-md-4 mb-3">
-                          <input
-                            type="text"
-                            className="form-control"
-                            placeholder="Icon (bi-icon-name)"
-                            value={newCoreValue.icon}
-                            onChange={(e) => setNewCoreValue({...newCoreValue, icon: e.target.value})}
-                          />
+                        <div className="aset-col-md-4">
+                          <div className="aset-form-group">
+                            <input
+                              type="text"
+                              className="aset-input"
+                              placeholder="Icon (bi-icon-name)"
+                              value={newCoreValue.icon}
+                              onChange={(e) => setNewCoreValue({...newCoreValue, icon: e.target.value})}
+                            />
+                          </div>
                         </div>
-                        <div className="col-12">
-                          <button className="btn btn-warning" onClick={addCoreValue}>
+                        <div className="aset-col-12">
+                          <button className="aset-btn aset-btn-warning" onClick={addCoreValue}>
                             <i className="bi bi-plus"></i> Add Core Value
                           </button>
                         </div>
@@ -1400,61 +1433,61 @@ function AdminSettings() {
 
             {/* SEO Tab */}
             {activeTab === 'seo' && (
-              <div className="card shadow">
-                <div className="card-header bg-primary text-white">
-                  <h5 className="mb-0">
-                    <i className="bi bi-search me-2"></i>
+              <div className="aset-card">
+                <div className="aset-card-header">
+                  <h5 className="aset-card-title">
+                    <i className="bi bi-search"></i>
                     SEO Settings
                   </h5>
                 </div>
-                <div className="card-body">
+                <div className="aset-card-body">
                   <form onSubmit={(e) => {
                     e.preventDefault();
                     handleSave("seo", { seo });
                   }}>
-                    <div className="mb-3">
-                      <label className="form-label fw-bold">Meta Title</label>
+                    <div className="aset-form-group">
+                      <label className="aset-label">Meta Title</label>
                       <input
                         type="text"
-                        className="form-control"
+                        className="aset-input"
                         value={seo.metaTitle || ""}
                         onChange={(e) => setSeo({...seo, metaTitle: e.target.value})}
                       />
                     </div>
 
-                    <div className="mb-3">
-                      <label className="form-label fw-bold">Meta Description</label>
+                    <div className="aset-form-group">
+                      <label className="aset-label">Meta Description</label>
                       <textarea
-                        className="form-control"
+                        className="aset-textarea"
                         rows="3"
                         value={seo.metaDescription || ""}
                         onChange={(e) => setSeo({...seo, metaDescription: e.target.value})}
                       ></textarea>
                     </div>
 
-                    <div className="mb-3">
-                      <label className="form-label fw-bold">Meta Keywords</label>
+                    <div className="aset-form-group">
+                      <label className="aset-label">Meta Keywords</label>
                       <input
                         type="text"
-                        className="form-control"
+                        className="aset-input"
                         value={seo.metaKeywords || ""}
                         onChange={(e) => setSeo({...seo, metaKeywords: e.target.value})}
                         placeholder="fashion, clothing, garments, retail"
                       />
                     </div>
 
-                    <div className="mb-3">
-                      <label className="form-label fw-bold">Google Analytics ID</label>
+                    <div className="aset-form-group">
+                      <label className="aset-label">Google Analytics ID</label>
                       <input
                         type="text"
-                        className="form-control"
+                        className="aset-input"
                         value={seo.googleAnalyticsId || ""}
                         onChange={(e) => setSeo({...seo, googleAnalyticsId: e.target.value})}
                         placeholder="UA-XXXXX-Y"
                       />
                     </div>
 
-                    <button type="submit" className="btn btn-primary" disabled={saving}>
+                    <button type="submit" className="aset-btn aset-btn-primary" disabled={saving}>
                       {saving ? "Saving..." : "Save SEO Settings"}
                     </button>
                   </form>
@@ -1464,95 +1497,100 @@ function AdminSettings() {
 
             {/* Theme Tab */}
             {activeTab === 'theme' && (
-              <div className="card shadow">
-                <div className="card-header bg-primary text-white">
-                  <h5 className="mb-0">
-                    <i className="bi bi-palette me-2"></i>
+              <div className="aset-card">
+                <div className="aset-card-header">
+                  <h5 className="aset-card-title">
+                    <i className="bi bi-palette"></i>
                     Theme Settings
                   </h5>
                 </div>
-                <div className="card-body">
+                <div className="aset-card-body">
                   <form onSubmit={(e) => {
                     e.preventDefault();
                     handleSave("theme", { theme });
                   }}>
-                    <div className="row">
-                      <div className="col-md-6 mb-3">
-                        <label className="form-label fw-bold">Primary Color</label>
-                        <div className="d-flex">
-                          <input
-                            type="color"
-                            className="form-control form-control-color me-2"
-                            value={theme.primaryColor || "#2c3e50"}
-                            onChange={(e) => setTheme({...theme, primaryColor: e.target.value})}
-                            style={{ width: "60px" }}
-                          />
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={theme.primaryColor || "#2c3e50"}
-                            onChange={(e) => setTheme({...theme, primaryColor: e.target.value})}
-                          />
+                    <div className="aset-row-flex">
+                      <div className="aset-col-md-6">
+                        <div className="aset-form-group">
+                          <label className="aset-label">Primary Color</label>
+                          <div className="aset-color-group">
+                            <input
+                              type="color"
+                              className="aset-color-picker"
+                              value={theme.primaryColor || "#2c3e50"}
+                              onChange={(e) => setTheme({...theme, primaryColor: e.target.value})}
+                            />
+                            <input
+                              type="text"
+                              className="aset-color-input"
+                              value={theme.primaryColor || "#2c3e50"}
+                              onChange={(e) => setTheme({...theme, primaryColor: e.target.value})}
+                            />
+                          </div>
                         </div>
                       </div>
 
-                      <div className="col-md-6 mb-3">
-                        <label className="form-label fw-bold">Secondary Color</label>
-                        <div className="d-flex">
-                          <input
-                            type="color"
-                            className="form-control form-control-color me-2"
-                            value={theme.secondaryColor || "#e74c3c"}
-                            onChange={(e) => setTheme({...theme, secondaryColor: e.target.value})}
-                            style={{ width: "60px" }}
-                          />
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={theme.secondaryColor || "#e74c3c"}
-                            onChange={(e) => setTheme({...theme, secondaryColor: e.target.value})}
-                          />
+                      <div className="aset-col-md-6">
+                        <div className="aset-form-group">
+                          <label className="aset-label">Secondary Color</label>
+                          <div className="aset-color-group">
+                            <input
+                              type="color"
+                              className="aset-color-picker"
+                              value={theme.secondaryColor || "#e74c3c"}
+                              onChange={(e) => setTheme({...theme, secondaryColor: e.target.value})}
+                            />
+                            <input
+                              type="text"
+                              className="aset-color-input"
+                              value={theme.secondaryColor || "#e74c3c"}
+                              onChange={(e) => setTheme({...theme, secondaryColor: e.target.value})}
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    <div className="row">
-                      <div className="col-md-6 mb-3">
-                        <label className="form-label fw-bold">Accent Color</label>
-                        <div className="d-flex">
-                          <input
-                            type="color"
-                            className="form-control form-control-color me-2"
-                            value={theme.accentColor || "#3498db"}
-                            onChange={(e) => setTheme({...theme, accentColor: e.target.value})}
-                            style={{ width: "60px" }}
-                          />
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={theme.accentColor || "#3498db"}
-                            onChange={(e) => setTheme({...theme, accentColor: e.target.value})}
-                          />
+                    <div className="aset-row-flex">
+                      <div className="aset-col-md-6">
+                        <div className="aset-form-group">
+                          <label className="aset-label">Accent Color</label>
+                          <div className="aset-color-group">
+                            <input
+                              type="color"
+                              className="aset-color-picker"
+                              value={theme.accentColor || "#3498db"}
+                              onChange={(e) => setTheme({...theme, accentColor: e.target.value})}
+                            />
+                            <input
+                              type="text"
+                              className="aset-color-input"
+                              value={theme.accentColor || "#3498db"}
+                              onChange={(e) => setTheme({...theme, accentColor: e.target.value})}
+                            />
+                          </div>
                         </div>
                       </div>
 
-                      <div className="col-md-6 mb-3">
-                        <label className="form-label fw-bold">Font Family</label>
-                        <select
-                          className="form-select"
-                          value={theme.fontFamily || "Poppins"}
-                          onChange={(e) => setTheme({...theme, fontFamily: e.target.value})}
-                        >
-                          <option value="Poppins">Poppins</option>
-                          <option value="Roboto">Roboto</option>
-                          <option value="Open Sans">Open Sans</option>
-                          <option value="Lato">Lato</option>
-                          <option value="Montserrat">Montserrat</option>
-                        </select>
+                      <div className="aset-col-md-6">
+                        <div className="aset-form-group">
+                          <label className="aset-label">Font Family</label>
+                          <select
+                            className="aset-select"
+                            value={theme.fontFamily || "Poppins"}
+                            onChange={(e) => setTheme({...theme, fontFamily: e.target.value})}
+                          >
+                            <option value="Poppins">Poppins</option>
+                            <option value="Roboto">Roboto</option>
+                            <option value="Open Sans">Open Sans</option>
+                            <option value="Lato">Lato</option>
+                            <option value="Montserrat">Montserrat</option>
+                          </select>
+                        </div>
                       </div>
                     </div>
 
-                    <button type="submit" className="btn btn-primary" disabled={saving}>
+                    <button type="submit" className="aset-btn aset-btn-primary" disabled={saving}>
                       {saving ? "Saving..." : "Save Theme Settings"}
                     </button>
                   </form>
@@ -1562,45 +1600,45 @@ function AdminSettings() {
 
             {/* Footer Tab */}
             {activeTab === 'footer' && (
-              <div className="card shadow">
-                <div className="card-header bg-primary text-white">
-                  <h5 className="mb-0">
-                    <i className="bi bi-layout-text-window me-2"></i>
+              <div className="aset-card">
+                <div className="aset-card-header">
+                  <h5 className="aset-card-title">
+                    <i className="bi bi-layout-text-window"></i>
                     Footer Content
                   </h5>
                 </div>
-                <div className="card-body">
+                <div className="aset-card-body">
                   <form onSubmit={(e) => {
                     e.preventDefault();
                     handleSave("footer", { footer });
                   }}>
-                    <div className="mb-3">
-                      <label className="form-label fw-bold">Copyright Text</label>
+                    <div className="aset-form-group">
+                      <label className="aset-label">Copyright Text</label>
                       <input
                         type="text"
-                        className="form-control"
+                        className="aset-input"
                         value={footer.copyright || "© {year} Advait Collections. All rights reserved."}
                         onChange={(e) => setFooter({...footer, copyright: e.target.value})}
                       />
-                      <small className="text-muted">Use {'{year}'} to auto-insert current year</small>
+                      <small className="aset-text-muted">Use {'{year}'} to auto-insert current year</small>
                     </div>
 
-                    <div className="mb-3">
-                      <div className="form-check">
+                    <div className="aset-form-group">
+                      <div className="aset-checkbox">
                         <input
                           type="checkbox"
-                          className="form-check-input"
+                          className="aset-checkbox-input"
                           id="showNewsletter"
                           checked={footer.showNewsletter || false}
                           onChange={(e) => setFooter({...footer, showNewsletter: e.target.checked})}
                         />
-                        <label className="form-check-label fw-bold" htmlFor="showNewsletter">
+                        <label className="aset-checkbox-label" htmlFor="showNewsletter">
                           Show Newsletter Signup
                         </label>
                       </div>
                     </div>
 
-                    <button type="submit" className="btn btn-primary" disabled={saving}>
+                    <button type="submit" className="aset-btn aset-btn-primary" disabled={saving}>
                       {saving ? "Saving..." : "Save Footer Settings"}
                     </button>
                   </form>
