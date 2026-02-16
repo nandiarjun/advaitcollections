@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
-import { productsAPI } from "../services/api";
+import { productsAPI, salesAPI } from "../services/api";
 
 function AdminDashboard() {
   const [summary, setSummary] = useState({
@@ -21,8 +21,7 @@ function AdminDashboard() {
   const [dateRange, setDateRange] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [sortConfig, setSortConfig] = useState({ key: 'productName', direction: 'asc' });
-
-  const token = localStorage.getItem("adminToken");
+  const [recentSales, setRecentSales] = useState([]);
 
   useEffect(() => {
     fetchData();
@@ -31,15 +30,23 @@ function AdminDashboard() {
   const fetchData = async () => {
     setLoading(true);
     setError(null);
+    
+    const token = localStorage.getItem("adminToken");
+    
+    if (!token) {
+      window.location.href = '/admin-login';
+      return;
+    }
+
     try {
-      if (!token) {
-        window.location.href = '/admin-login';
-        return;
-      }
-      await Promise.all([fetchSummary(), fetchReport()]);
+      await Promise.all([
+        fetchSummary(),
+        fetchReport(),
+        fetchRecentSales()
+      ]);
     } catch (error) {
       console.error("Error fetching data:", error);
-      setError(error.message || "Failed to load dashboard data");
+      setError(error.message || "Failed to load dashboard data. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -47,36 +54,57 @@ function AdminDashboard() {
 
   const fetchSummary = async () => {
     try {
-      const data = await productsAPI.getDashboardSummary(token);
-      setSummary(data);
+      const data = await productsAPI.getDashboardSummary();
+      setSummary(prev => ({
+        ...prev,
+        ...data
+      }));
     } catch (error) {
-      throw error;
+      console.error("Summary fetch error:", error);
+      throw new Error("Failed to load summary data");
     }
   };
 
   const fetchReport = async () => {
     try {
-      const data = await productsAPI.getProductReport(token);
-      setReport(data);
+      // Try to get product report, fallback to empty array if not available
+      const data = await productsAPI.getProductReport();
+      setReport(Array.isArray(data) ? data : []);
     } catch (error) {
-      throw error;
+      console.error("Report fetch error:", error);
+      setReport([]);
+    }
+  };
+
+  const fetchRecentSales = async () => {
+    try {
+      const data = await salesAPI.getRecentSales(5);
+      setRecentSales(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Recent sales fetch error:", error);
+      setRecentSales([]);
     }
   };
 
   // Export to Excel
   const exportToExcel = () => {
+    if (!filteredReport.length) {
+      alert("No data to export");
+      return;
+    }
+
     const exportData = filteredReport.map(item => ({
-      "Product Name": item.productName,
-      "Barcode": item.barcode,
-      "Current Stock": item.currentStock,
-      "Total Sold": item.totalSoldQty,
-      "Total Purchased": item.totalPurchasedQty,
-      "Purchase Rate": `₹${item.purchaseRate}`,
-      "Selling Rate": `₹${item.sellingRate}`,
-      "Total Purchase Value": `₹${item.totalPurchaseValue.toFixed(2)}`,
-      "Total Sales Value": `₹${item.totalSalesValue.toFixed(2)}`,
-      "Profit/Loss": `₹${item.profit.toFixed(2)}`,
-      "Profit Margin": `${item.profitMargin}%`
+      "Product Name": item.productName || 'N/A',
+      "Barcode": item.barcode || 'N/A',
+      "Current Stock": item.currentStock || 0,
+      "Total Sold": item.totalSoldQty || 0,
+      "Total Purchased": item.totalPurchasedQty || 0,
+      "Purchase Rate": `₹${(item.purchaseRate || 0).toFixed(2)}`,
+      "Selling Rate": `₹${(item.sellingRate || 0).toFixed(2)}`,
+      "Total Purchase Value": `₹${(item.totalPurchaseValue || 0).toFixed(2)}`,
+      "Total Sales Value": `₹${(item.totalSalesValue || 0).toFixed(2)}`,
+      "Profit/Loss": `₹${(item.profit || 0).toFixed(2)}`,
+      "Profit Margin": `${(item.profitMargin || 0).toFixed(2)}%`
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);
@@ -106,18 +134,23 @@ function AdminDashboard() {
 
   // Export as CSV
   const exportAsCSV = () => {
+    if (!filteredReport.length) {
+      alert("No data to export");
+      return;
+    }
+
     const exportData = filteredReport.map(item => ({
-      Product: item.productName,
-      Barcode: item.barcode,
-      Stock: item.currentStock,
-      Sold: item.totalSoldQty,
-      Purchased: item.totalPurchasedQty,
-      Purchase_Rate: item.purchaseRate,
-      Selling_Rate: item.sellingRate,
-      Purchase_Value: item.totalPurchaseValue.toFixed(2),
-      Sales_Value: item.totalSalesValue.toFixed(2),
-      Profit: item.profit.toFixed(2),
-      Margin: `${item.profitMargin}%`
+      Product: item.productName || 'N/A',
+      Barcode: item.barcode || 'N/A',
+      Stock: item.currentStock || 0,
+      Sold: item.totalSoldQty || 0,
+      Purchased: item.totalPurchasedQty || 0,
+      Purchase_Rate: (item.purchaseRate || 0).toFixed(2),
+      Selling_Rate: (item.sellingRate || 0).toFixed(2),
+      Purchase_Value: (item.totalPurchaseValue || 0).toFixed(2),
+      Sales_Value: (item.totalSalesValue || 0).toFixed(2),
+      Profit: (item.profit || 0).toFixed(2),
+      Margin: `${(item.profitMargin || 0).toFixed(2)}%`
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);
@@ -129,20 +162,22 @@ function AdminDashboard() {
 
   // Filter and sort report
   const getFilteredReport = () => {
+    if (!Array.isArray(report) || report.length === 0) return [];
+
     let filtered = [...report];
 
     // Apply profit/loss filter
     if (dateRange === "profit") {
-      filtered = filtered.filter(item => item.profit > 0);
+      filtered = filtered.filter(item => (item.profit || 0) > 0);
     } else if (dateRange === "loss") {
-      filtered = filtered.filter(item => item.profit < 0);
+      filtered = filtered.filter(item => (item.profit || 0) < 0);
     }
 
     // Apply search filter
     if (searchTerm) {
       filtered = filtered.filter(item =>
-        item.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.barcode.toLowerCase().includes(searchTerm.toLowerCase())
+        (item.productName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (item.barcode || '').toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -150,6 +185,10 @@ function AdminDashboard() {
     filtered.sort((a, b) => {
       let aVal = a[sortConfig.key];
       let bVal = b[sortConfig.key];
+      
+      // Handle undefined values
+      aVal = aVal !== undefined ? aVal : '';
+      bVal = bVal !== undefined ? bVal : '';
       
       if (typeof aVal === 'string') {
         aVal = aVal.toLowerCase();
@@ -168,11 +207,11 @@ function AdminDashboard() {
 
   // Calculate totals
   const totals = filteredReport.reduce((acc, item) => ({
-    totalSales: acc.totalSales + item.totalSalesValue,
-    totalPurchases: acc.totalPurchases + item.totalPurchaseValue,
-    totalProfit: acc.totalProfit + item.profit,
-    totalStock: acc.totalStock + item.currentStock,
-    totalSold: acc.totalSold + item.totalSoldQty
+    totalSales: acc.totalSales + (item.totalSalesValue || 0),
+    totalPurchases: acc.totalPurchases + (item.totalPurchaseValue || 0),
+    totalProfit: acc.totalProfit + (item.profit || 0),
+    totalStock: acc.totalStock + (item.currentStock || 0),
+    totalSold: acc.totalSold + (item.totalSoldQty || 0)
   }), {
     totalSales: 0,
     totalPurchases: 0,
@@ -185,7 +224,8 @@ function AdminDashboard() {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
-      minimumFractionDigits: 2
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
     }).format(amount || 0);
   };
 
@@ -217,13 +257,21 @@ function AdminDashboard() {
   if (error) {
     return (
       <div className="container-fluid py-5 text-center">
-        <i className="bi bi-exclamation-triangle display-1 text-danger"></i>
+        <div className="mb-4">
+          <i className="bi bi-exclamation-triangle display-1 text-danger"></i>
+        </div>
         <h4 className="mt-3">Oops! Something went wrong</h4>
-        <p className="text-muted">{error}</p>
-        <button className="btn btn-primary mt-3" onClick={fetchData}>
-          <i className="bi bi-arrow-repeat me-2"></i>
-          Retry
-        </button>
+        <p className="text-muted mb-4">{error}</p>
+        <div className="d-flex justify-content-center gap-3">
+          <button className="btn btn-primary" onClick={fetchData}>
+            <i className="bi bi-arrow-repeat me-2"></i>
+            Retry
+          </button>
+          <Link to="/admin-login" className="btn btn-outline-secondary">
+            <i className="bi bi-box-arrow-in-right me-2"></i>
+            Login Again
+          </Link>
+        </div>
       </div>
     );
   }
@@ -246,7 +294,7 @@ function AdminDashboard() {
             <i className="bi bi-arrow-repeat me-2"></i>
             Refresh
           </button>
-          <Link to="/admin-dashboard/sales" className="btn btn-primary btn-sm">
+          <Link to="/admin/sales/new" className="btn btn-primary btn-sm">
             <i className="bi bi-cart-plus me-2"></i>
             New Sale
           </Link>
@@ -266,7 +314,7 @@ function AdminDashboard() {
                 </div>
                 <div className="flex-grow-1 ms-3">
                   <h6 className="text-muted mb-1">Total Products</h6>
-                  <h4 className="mb-0 fw-bold">{summary.totalProducts}</h4>
+                  <h4 className="mb-0 fw-bold">{summary.totalProducts || 0}</h4>
                   <small className="text-muted">Unique items</small>
                 </div>
               </div>
@@ -285,7 +333,7 @@ function AdminDashboard() {
                 </div>
                 <div className="flex-grow-1 ms-3">
                   <h6 className="text-muted mb-1">Total Stock</h6>
-                  <h4 className="mb-0 fw-bold">{summary.totalStock}</h4>
+                  <h4 className="mb-0 fw-bold">{summary.totalStock || 0}</h4>
                   <small className="text-muted">Units available</small>
                 </div>
               </div>
@@ -317,13 +365,13 @@ function AdminDashboard() {
             <div className="card-body">
               <div className="d-flex align-items-center">
                 <div className="flex-shrink-0">
-                  <div className={`bg-opacity-10 p-3 rounded ${summary.totalProfit >= 0 ? 'bg-success' : 'bg-danger'}`}>
-                    <i className={`bi bi-cash-stack fs-4 ${summary.totalProfit >= 0 ? 'text-success' : 'text-danger'}`}></i>
+                  <div className={`bg-opacity-10 p-3 rounded ${(summary.totalProfit || 0) >= 0 ? 'bg-success' : 'bg-danger'}`}>
+                    <i className={`bi bi-cash-stack fs-4 ${(summary.totalProfit || 0) >= 0 ? 'text-success' : 'text-danger'}`}></i>
                   </div>
                 </div>
                 <div className="flex-grow-1 ms-3">
                   <h6 className="text-muted mb-1">Total Profit</h6>
-                  <h4 className={`mb-0 fw-bold ${summary.totalProfit >= 0 ? 'text-success' : 'text-danger'}`}>
+                  <h4 className={`mb-0 fw-bold ${(summary.totalProfit || 0) >= 0 ? 'text-success' : 'text-danger'}`}>
                     {formatCurrency(summary.totalProfit)}
                   </h4>
                   <small className="text-muted">Today: {formatCurrency(summary.todayProfit)}</small>
@@ -333,6 +381,46 @@ function AdminDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Recent Sales Section */}
+      {recentSales.length > 0 && (
+        <div className="row mb-4">
+          <div className="col-12">
+            <div className="card border-0 shadow-sm">
+              <div className="card-header bg-white py-3">
+                <h6 className="fw-bold mb-0">
+                  <i className="bi bi-clock-history me-2 text-primary"></i>
+                  Recent Sales
+                </h6>
+              </div>
+              <div className="card-body">
+                <div className="table-responsive">
+                  <table className="table table-sm">
+                    <thead>
+                      <tr>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {recentSales.map((sale, index) => (
+                        <tr key={sale._id || index}>
+                          <td>{sale.productName || sale.product?.name || 'N/A'}</td>
+                          <td>{sale.quantity || 0}</td>
+                          <td>{formatCurrency(sale.amount || 0)}</td>
+                          <td>{sale.date ? new Date(sale.date).toLocaleDateString() : 'N/A'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Filters and Actions */}
       <div className="row g-3 mb-4">
@@ -374,11 +462,11 @@ function AdminDashboard() {
         </div>
         <div className="col-md-4">
           <div className="btn-group w-100">
-            <button className="btn btn-success" onClick={exportToExcel}>
+            <button className="btn btn-success" onClick={exportToExcel} disabled={!filteredReport.length}>
               <i className="bi bi-file-excel me-2"></i>
               Excel
             </button>
-            <button className="btn btn-outline-success" onClick={exportAsCSV}>
+            <button className="btn btn-outline-success" onClick={exportAsCSV} disabled={!filteredReport.length}>
               <i className="bi bi-filetype-csv me-2"></i>
               CSV
             </button>
@@ -482,48 +570,48 @@ function AdminDashboard() {
               </thead>
               <tbody>
                 {filteredReport.map((item, index) => (
-                  <tr key={index}>
+                  <tr key={item._id || index}>
                     <td className="px-3">
                       <div className="d-flex align-items-center">
                         <div className="bg-light rounded p-1 me-2">
                           <i className="bi bi-box text-primary"></i>
                         </div>
                         <div>
-                          <span className="fw-medium">{item.productName}</span>
-                          {item.profitMargin > 20 && (
+                          <span className="fw-medium">{item.productName || 'N/A'}</span>
+                          {(item.profitMargin || 0) > 20 && (
                             <span className="badge bg-success bg-opacity-10 text-success ms-2">High Margin</span>
                           )}
                         </div>
                       </div>
                     </td>
                     <td>
-                      <code className="text-muted">{item.barcode}</code>
+                      <code className="text-muted">{item.barcode || 'N/A'}</code>
                     </td>
                     <td className="text-center">
-                      <span className={`badge ${item.currentStock > 0 ? 'bg-info' : 'bg-secondary'} bg-opacity-10 text-${item.currentStock > 0 ? 'info' : 'secondary'}`}>
-                        {item.currentStock}
+                      <span className={`badge ${(item.currentStock || 0) > 0 ? 'bg-info' : 'bg-secondary'} bg-opacity-10 text-${(item.currentStock || 0) > 0 ? 'info' : 'secondary'}`}>
+                        {item.currentStock || 0}
                       </span>
                     </td>
                     <td className="text-center">
                       <span className="badge bg-warning bg-opacity-10 text-warning">
-                        {item.totalSoldQty}
+                        {item.totalSoldQty || 0}
                       </span>
                     </td>
                     <td className="text-center">
                       <span className="badge bg-secondary bg-opacity-10 text-secondary">
-                        {item.totalPurchasedQty}
+                        {item.totalPurchasedQty || 0}
                       </span>
                     </td>
                     <td className="text-end">{formatCurrency(item.purchaseRate)}</td>
                     <td className="text-end">{formatCurrency(item.sellingRate)}</td>
                     <td className="text-end text-danger">{formatCurrency(item.totalPurchaseValue)}</td>
                     <td className="text-end text-success">{formatCurrency(item.totalSalesValue)}</td>
-                    <td className={`text-end fw-bold ${item.profit >= 0 ? 'text-success' : 'text-danger'}`}>
-                      {item.profit >= 0 ? '+' : ''}{formatCurrency(item.profit)}
+                    <td className={`text-end fw-bold ${(item.profit || 0) >= 0 ? 'text-success' : 'text-danger'}`}>
+                      {(item.profit || 0) >= 0 ? '+' : ''}{formatCurrency(item.profit)}
                     </td>
                     <td className="text-center">
-                      <span className={`badge ${item.profitMargin >= 0 ? 'bg-success' : 'bg-danger'}`}>
-                        {item.profitMargin}%
+                      <span className={`badge ${(item.profitMargin || 0) >= 0 ? 'bg-success' : 'bg-danger'}`}>
+                        {(item.profitMargin || 0).toFixed(2)}%
                       </span>
                     </td>
                   </tr>
@@ -569,12 +657,21 @@ function AdminDashboard() {
       </div>
 
       {/* Add custom CSS */}
-      <style jsx="true">{`
+      <style>{`
         .cursor-pointer {
           cursor: pointer;
+          transition: background-color 0.2s;
         }
         .cursor-pointer:hover {
-          background-color: #e9ecef;
+          background-color: #f8f9fa !important;
+        }
+        .table thead th {
+          border-bottom-width: 1px;
+          font-weight: 600;
+          color: #495057;
+        }
+        .badge {
+          font-weight: 500;
         }
       `}</style>
     </div>
