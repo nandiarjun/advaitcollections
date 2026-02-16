@@ -8,47 +8,57 @@ function AdminLogin() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [debugInfo, setDebugInfo] = useState(null);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setDebugInfo(null);
+
+    const loginData = { email, password };
+    console.log("🔵 Sending login data:", loginData);
 
     try {
-      // Using the authAPI from your centralized api.js with correct endpoint
-      const response = await authAPI.adminLogin({ email, password });
+      const response = await authAPI.adminLogin(loginData);
+      console.log("🟢 Login response:", response);
       
-      // Store token in localStorage if returned
+      setDebugInfo({ success: true, data: response });
+      
       if (response.token) {
         localStorage.setItem('adminToken', response.token);
       }
       
-      // Store user data if needed
       if (response.user) {
         localStorage.setItem('adminUser', JSON.stringify(response.user));
       }
       
-      // Show success message
       alert("✅ Login Successful! Redirecting to dashboard...");
-      
-      // Navigate to admin dashboard
       navigate("/admin-dashboard");
 
     } catch (error) {
-      console.error("Login error:", error);
+      console.error("🔴 Login error:", error);
+      console.error("Error response:", error.response?.data);
       
-      // Handle different error scenarios
-      if (error.response?.status === 404) {
-        setError("Login service unavailable. Please check backend connection.");
-      } else if (error.response?.status === 401) {
-        setError("Invalid email or password");
+      setDebugInfo({ 
+        error: true, 
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message 
+      });
+      
+      // Show specific error message from backend
+      if (error.response?.data?.message) {
+        setError(error.response.data.message);
+      } else if (error.response?.data?.error) {
+        setError(error.response.data.error);
       } else if (error.response?.status === 400) {
-        setError("Please provide both email and password");
+        setError("Bad request. Please check your email and password format.");
       } else if (error.code === 'ERR_NETWORK') {
-        setError("Network error. Please check if backend server is running.");
+        setError("Network error. Cannot connect to server.");
       } else {
-        setError(error.response?.data?.message || "Login failed. Please try again.");
+        setError("Login failed. Please try again.");
       }
     } finally {
       setLoading(false);
@@ -77,6 +87,16 @@ function AdminLogin() {
                   <i className="bi bi-exclamation-triangle-fill me-2"></i>
                   {error}
                   <button type="button" className="btn-close" onClick={() => setError("")}></button>
+                </div>
+              )}
+
+              {/* Debug Info - Remove in production */}
+              {debugInfo && (
+                <div className="alert alert-secondary small mb-3">
+                  <strong>Debug:</strong>
+                  <pre className="mb-0 mt-1" style={{ fontSize: '11px' }}>
+                    {JSON.stringify(debugInfo, null, 2)}
+                  </pre>
                 </div>
               )}
 
