@@ -309,7 +309,7 @@ export const authAPI = {
   adminLogin: async (credentials) => {
     try {
       console.log("Attempting login...");
-      const res = await api.post("/auth/admin-login", credentials);
+      const res = await api.post("/auth/login", credentials);
       
       if (res.data.token) {
         localStorage.setItem("adminToken", res.data.token);
