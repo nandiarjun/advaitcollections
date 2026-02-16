@@ -39,38 +39,32 @@ function AdminDashboard() {
     }
 
     try {
-      await Promise.all([
-        fetchSummary(),
-        fetchReport()
+      console.log("Fetching dashboard data...");
+      const [summaryData, reportData] = await Promise.all([
+        productsAPI.getDashboardSummary(),
+        productsAPI.getProductReport()
       ]);
+      
+      console.log("Summary data:", summaryData);
+      console.log("Report data:", reportData);
+      
+      setSummary(summaryData || {
+        totalProducts: 0,
+        totalStock: 0,
+        totalSaleValue: 0,
+        totalPurchaseValue: 0,
+        totalProfit: 0,
+        todaySaleValue: 0,
+        todayProfit: 0
+      });
+      
+      // Ensure reportData is an array
+      setReport(Array.isArray(reportData) ? reportData : []);
     } catch (error) {
       console.error("Error fetching data:", error);
       setError(error.message || "Failed to load dashboard data. Please try again.");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchSummary = async () => {
-    try {
-      const data = await productsAPI.getDashboardSummary();
-      setSummary(prev => ({
-        ...prev,
-        ...data
-      }));
-    } catch (error) {
-      console.error("Summary fetch error:", error);
-      throw new Error("Failed to load summary data");
-    }
-  };
-
-  const fetchReport = async () => {
-    try {
-      const data = await productsAPI.getProductReport();
-      setReport(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error("Report fetch error:", error);
-      setReport([]);
     }
   };
 
@@ -161,10 +155,11 @@ function AdminDashboard() {
     }
 
     // Apply search filter
-    if (searchTerm) {
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
       filtered = filtered.filter(item =>
-        (item.productName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (item.barcode || '').toLowerCase().includes(searchTerm.toLowerCase())
+        (item.productName || '').toLowerCase().includes(term) ||
+        (item.barcode || '').toLowerCase().includes(term)
       );
     }
 
@@ -213,6 +208,14 @@ function AdminDashboard() {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     }).format(amount || 0);
+  };
+
+  // Safe number formatter for profit margin
+  const formatPercentage = (value) => {
+    if (value === undefined || value === null) return "0.00%";
+    const num = parseFloat(value);
+    if (isNaN(num)) return "0.00%";
+    return `${num.toFixed(2)}%`;
   };
 
   const handleSort = (key) => {
@@ -344,7 +347,7 @@ function AdminDashboard() {
             </div>
             <div className="adm-dash-stat-info">
               <div className="adm-dash-stat-label">Total Profit</div>
-              <div className={`adm-dash-stat-value ${(summary.totalProfit || 0) >= 0 ? 'adm-dash-stat-success' : 'adm-dash-stat-danger'}`}>
+              <div className={`adm-dash-stat-value ${(summary.totalProfit || 0) >= 0 ? 'text-success' : 'text-danger'}`}>
                 {formatCurrency(summary.totalProfit)}
               </div>
               <div className="adm-dash-stat-sub">
@@ -519,7 +522,7 @@ function AdminDashboard() {
                   </td>
                   <td className="text-center">
                     <span className={`adm-dash-product-badge ${(item.profitMargin || 0) >= 0 ? 'success' : 'danger'}`}>
-                      {(item.profitMargin || 0).toFixed(2)}%
+                      {formatPercentage(item.profitMargin)}
                     </span>
                   </td>
                 </tr>
