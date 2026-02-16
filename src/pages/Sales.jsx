@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { productsAPI, salesAPI } from "../services/api";
+import "./Sales.css";
 
 function Sales() {
   const [products, setProducts] = useState([]);
@@ -36,14 +37,13 @@ function Sales() {
         return;
       }
       const data = await salesAPI.getSalesHistory();
-      console.log("Recent sales data:", data); // Debug log
+      console.log("Recent sales data:", data);
       
-      // Ensure data is an array and sort by date (newest first)
       const salesArray = Array.isArray(data) ? data : [];
       const sortedSales = salesArray.sort((a, b) => 
         new Date(b.createdAt) - new Date(a.createdAt)
       );
-      setRecentSales(sortedSales.slice(0, 10)); // Get last 10 sales
+      setRecentSales(sortedSales.slice(0, 10));
     } catch (error) {
       console.error("Error fetching recent sales:", error);
       setRecentSales([]);
@@ -99,7 +99,6 @@ function Sales() {
         quantitySold: Number(quantitySold),
       };
 
-      // Only add customSellingPrice if it's different from default
       if (customSellingPrice && Number(customSellingPrice) !== product.sellingRate) {
         saleData.customSellingPrice = Number(customSellingPrice);
       }
@@ -108,16 +107,13 @@ function Sales() {
 
       setSuccess(`✅ Sale Completed Successfully! Remaining Stock: ${res.remainingStock || 0}`);
 
-      // Reset form
       setQuantitySold("");
       setCustomSellingPrice("");
       setSelectedProduct("");
       setSelectedProductDetails(null);
       
-      // Refresh both products and recent sales
       await Promise.all([fetchProducts(), fetchRecentSales()]);
 
-      // Clear success message after 5 seconds
       setTimeout(() => setSuccess(null), 5000);
 
     } catch (error) {
@@ -168,270 +164,286 @@ function Sales() {
   const inStockProducts = products.filter(p => p.quantity > 0);
 
   return (
-    <div className="container-fluid py-4">
-      <div className="row g-4">
+    <div className="sls-container">
+      <div className="sls-grid">
         {/* Left Column - New Sale Form */}
-        <div className="col-lg-7">
-          <div className="card border-0 shadow-sm">
-            <div className="card-header bg-white border-0 pt-3">
-              <h5 className="mb-0">
-                <i className="bi bi-cart-plus me-2 text-success"></i>
-                New Sale Transaction
-              </h5>
-            </div>
-            <div className="card-body">
-              {/* Alert Messages */}
-              {error && (
-                <div className="alert alert-danger alert-dismissible fade show" role="alert">
-                  <i className="bi bi-exclamation-triangle-fill me-2"></i>
-                  {error}
-                  <button type="button" className="btn-close" onClick={() => setError(null)}></button>
+        <div className="sls-card">
+          <div className="sls-card-header">
+            <h5 className="sls-card-title">
+              <i className="bi bi-cart-plus"></i>
+              New Sale Transaction
+            </h5>
+          </div>
+          <div className="sls-card-body">
+            {/* Alert Messages */}
+            {error && (
+              <div className="sls-alert sls-alert-danger">
+                <div className="sls-alert-content">
+                  <i className="bi bi-exclamation-triangle-fill sls-alert-icon"></i>
+                  <span>{error}</span>
                 </div>
-              )}
-              
-              {success && (
-                <div className="alert alert-success alert-dismissible fade show" role="alert">
-                  <i className="bi bi-check-circle-fill me-2"></i>
-                  {success}
-                  <button type="button" className="btn-close" onClick={() => setSuccess(null)}></button>
-                </div>
-              )}
-
-              <form onSubmit={handleSell}>
-                {/* Product Selection */}
-                <div className="mb-4">
-                  <label className="form-label fw-semibold">Select Product</label>
-                  <select
-                    className="form-select form-select-lg"
-                    value={selectedProduct}
-                    onChange={(e) => handleProductSelect(e.target.value)}
-                    required
-                  >
-                    <option value="">Choose a product...</option>
-                    {inStockProducts.map(product => (
-                      <option key={product._id} value={product._id}>
-                        {product.name} - Stock: {product.quantity} ({formatCurrency(product.sellingRate)}/unit)
-                      </option>
-                    ))}
-                  </select>
-                  
-                  {inStockProducts.length === 0 && (
-                    <div className="alert alert-warning mt-3">
-                      <i className="bi bi-exclamation-triangle me-2"></i>
-                      No products in stock. Please add products first.
-                    </div>
-                  )}
-                </div>
-
-                {/* Product Details Card */}
-                {selectedProductDetails && (
-                  <div className="card bg-light border-0 mb-4">
-                    <div className="card-body">
-                      <h6 className="fw-semibold mb-3">Product Details</h6>
-                      <div className="row g-3">
-                        <div className="col-sm-6">
-                          <div className="d-flex align-items-center mb-2">
-                            <i className="bi bi-box text-primary me-2"></i>
-                            <span><strong>Name:</strong> {selectedProductDetails.name}</span>
-                          </div>
-                          <div className="d-flex align-items-center mb-2">
-                            <i className="bi bi-upc-scan text-primary me-2"></i>
-                            <span><strong>Barcode:</strong> {selectedProductDetails.barcode}</span>
-                          </div>
-                          <div className="d-flex align-items-center">
-                            <i className="bi bi-boxes text-primary me-2"></i>
-                            <span><strong>Stock:</strong> {selectedProductDetails.quantity}</span>
-                          </div>
-                        </div>
-                        <div className="col-sm-6">
-                          <div className="d-flex align-items-center mb-2">
-                            <i className="bi bi-cart text-primary me-2"></i>
-                            <span><strong>Purchase:</strong> {formatCurrency(selectedProductDetails.purchaseRate)}</span>
-                          </div>
-                          <div className="d-flex align-items-center mb-2">
-                            <i className="bi bi-tag text-primary me-2"></i>
-                            <span><strong>Selling:</strong> {formatCurrency(selectedProductDetails.sellingRate)}</span>
-                          </div>
-                          <div className="d-flex align-items-center">
-                            <i className="bi bi-percent text-primary me-2"></i>
-                            <span><strong>GST:</strong> {selectedProductDetails.gst}%</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Quantity and Price */}
-                <div className="row g-3 mb-4">
-                  <div className="col-md-6">
-                    <label className="form-label fw-semibold">Quantity *</label>
-                    <div className="input-group">
-                      <span className="input-group-text bg-light">
-                        <i className="bi bi-sort-numeric-up"></i>
-                      </span>
-                      <input
-                        type="number"
-                        className="form-control"
-                        placeholder="Enter quantity"
-                        min="1"
-                        max={selectedProductDetails?.quantity || 1}
-                        value={quantitySold}
-                        onChange={(e) => setQuantitySold(e.target.value)}
-                        required
-                      />
-                    </div>
-                    {selectedProductDetails && (
-                      <small className="text-muted">
-                        Max available: {selectedProductDetails.quantity}
-                      </small>
-                    )}
-                  </div>
-
-                  <div className="col-md-6">
-                    <label className="form-label fw-semibold">
-                      Selling Price <span className="text-muted fw-normal">(Optional)</span>
-                    </label>
-                    <div className="input-group">
-                      <span className="input-group-text bg-light">₹</span>
-                      <input
-                        type="number"
-                        className="form-control"
-                        placeholder="Custom price"
-                        min="0"
-                        step="0.01"
-                        value={customSellingPrice}
-                        onChange={(e) => setCustomSellingPrice(e.target.value)}
-                      />
-                    </div>
-                    {selectedProductDetails && (
-                      <small className="text-muted">
-                        Default: {formatCurrency(selectedProductDetails.sellingRate)}
-                      </small>
-                    )}
-                  </div>
-                </div>
-
-                {/* Transaction Summary */}
-                {selectedProductDetails && quantitySold && (
-                  <div className="card bg-primary text-white mb-4">
-                    <div className="card-body">
-                      <h6 className="fw-semibold mb-3">Transaction Summary</h6>
-                      <div className="row g-3">
-                        <div className="col-4 text-center">
-                          <small className="d-block text-white-50">Sale Amount</small>
-                          <h5 className="mb-0">
-                            {formatCurrency(
-                              Number(customSellingPrice || selectedProductDetails.sellingRate) * Number(quantitySold)
-                            )}
-                          </h5>
-                        </div>
-                        <div className="col-4 text-center">
-                          <small className="d-block text-white-50">Purchase Cost</small>
-                          <h5 className="mb-0">
-                            {formatCurrency(selectedProductDetails.purchaseRate * Number(quantitySold))}
-                          </h5>
-                        </div>
-                        <div className="col-4 text-center">
-                          <small className="d-block text-white-50">Expected Profit</small>
-                          <h5 className="mb-0">
-                            {formatCurrency(calculateExpectedProfit())}
-                          </h5>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Submit Button */}
-                <button
-                  type="submit"
-                  className="btn btn-success btn-lg w-100"
-                  disabled={loading || !selectedProduct || !quantitySold}
-                >
-                  {loading ? (
-                    <>
-                      <span className="spinner-border spinner-border-sm me-2"></span>
-                      Processing Sale...
-                    </>
-                  ) : (
-                    <>
-                      <i className="bi bi-check2-circle me-2"></i>
-                      Complete Sale
-                    </>
-                  )}
+                <button className="sls-alert-close" onClick={() => setError(null)}>
+                  <i className="bi bi-x"></i>
                 </button>
-              </form>
-            </div>
+              </div>
+            )}
+            
+            {success && (
+              <div className="sls-alert sls-alert-success">
+                <div className="sls-alert-content">
+                  <i className="bi bi-check-circle-fill sls-alert-icon"></i>
+                  <span>{success}</span>
+                </div>
+                <button className="sls-alert-close" onClick={() => setSuccess(null)}>
+                  <i className="bi bi-x"></i>
+                </button>
+              </div>
+            )}
+
+            <form onSubmit={handleSell}>
+              {/* Product Selection */}
+              <div className="sls-form-group">
+                <label className="sls-label">Select Product</label>
+                <select
+                  className="sls-select"
+                  value={selectedProduct}
+                  onChange={(e) => handleProductSelect(e.target.value)}
+                  required
+                >
+                  <option value="">Choose a product...</option>
+                  {inStockProducts.map(product => (
+                    <option key={product._id} value={product._id}>
+                      {product.name} - Stock: {product.quantity} ({formatCurrency(product.sellingRate)}/unit)
+                    </option>
+                  ))}
+                </select>
+                
+                {inStockProducts.length === 0 && (
+                  <div className="sls-warning">
+                    <i className="bi bi-exclamation-triangle"></i>
+                    <span>No products in stock. Please add products first.</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Product Details Card */}
+              {selectedProductDetails && (
+                <div className="sls-details-card">
+                  <div className="sls-details-body">
+                    <h6 className="sls-details-title">Product Details</h6>
+                    <div className="sls-details-grid">
+                      <div>
+                        <div className="sls-detail-item">
+                          <i className="bi bi-box sls-detail-icon"></i>
+                          <span className="sls-detail-text">
+                            <strong>Name:</strong> {selectedProductDetails.name}
+                          </span>
+                        </div>
+                        <div className="sls-detail-item">
+                          <i className="bi bi-upc-scan sls-detail-icon"></i>
+                          <span className="sls-detail-text">
+                            <strong>Barcode:</strong> {selectedProductDetails.barcode}
+                          </span>
+                        </div>
+                        <div className="sls-detail-item">
+                          <i className="bi bi-boxes sls-detail-icon"></i>
+                          <span className="sls-detail-text">
+                            <strong>Stock:</strong> {selectedProductDetails.quantity}
+                          </span>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="sls-detail-item">
+                          <i className="bi bi-cart sls-detail-icon"></i>
+                          <span className="sls-detail-text">
+                            <strong>Purchase:</strong> {formatCurrency(selectedProductDetails.purchaseRate)}
+                          </span>
+                        </div>
+                        <div className="sls-detail-item">
+                          <i className="bi bi-tag sls-detail-icon"></i>
+                          <span className="sls-detail-text">
+                            <strong>Selling:</strong> {formatCurrency(selectedProductDetails.sellingRate)}
+                          </span>
+                        </div>
+                        <div className="sls-detail-item">
+                          <i className="bi bi-percent sls-detail-icon"></i>
+                          <span className="sls-detail-text">
+                            <strong>GST:</strong> {selectedProductDetails.gst}%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Quantity and Price */}
+              <div className="sls-row">
+                <div className="sls-input-group">
+                  <label className="sls-label">Quantity *</label>
+                  <div className="sls-input-wrapper">
+                    <span className="sls-input-prefix">
+                      <i className="bi bi-sort-numeric-up"></i>
+                    </span>
+                    <input
+                      type="number"
+                      className="sls-input"
+                      placeholder="Enter quantity"
+                      min="1"
+                      max={selectedProductDetails?.quantity || 1}
+                      value={quantitySold}
+                      onChange={(e) => setQuantitySold(e.target.value)}
+                      required
+                    />
+                  </div>
+                  {selectedProductDetails && (
+                    <small className="sls-input-hint">
+                      Max available: {selectedProductDetails.quantity}
+                    </small>
+                  )}
+                </div>
+
+                <div className="sls-input-group">
+                  <label className="sls-label">
+                    Selling Price <span className="sls-input-hint">(Optional)</span>
+                  </label>
+                  <div className="sls-input-wrapper">
+                    <span className="sls-input-prefix">₹</span>
+                    <input
+                      type="number"
+                      className="sls-input"
+                      placeholder="Custom price"
+                      min="0"
+                      step="0.01"
+                      value={customSellingPrice}
+                      onChange={(e) => setCustomSellingPrice(e.target.value)}
+                    />
+                  </div>
+                  {selectedProductDetails && (
+                    <small className="sls-input-hint">
+                      Default: {formatCurrency(selectedProductDetails.sellingRate)}
+                    </small>
+                  )}
+                </div>
+              </div>
+
+              {/* Transaction Summary */}
+              {selectedProductDetails && quantitySold && (
+                <div className="sls-summary-card">
+                  <div className="sls-summary-body">
+                    <h6 className="sls-summary-title">Transaction Summary</h6>
+                    <div className="sls-summary-grid">
+                      <div>
+                        <span className="sls-summary-label">Sale Amount</span>
+                        <h5 className="sls-summary-value">
+                          {formatCurrency(
+                            Number(customSellingPrice || selectedProductDetails.sellingRate) * Number(quantitySold)
+                          )}
+                        </h5>
+                      </div>
+                      <div>
+                        <span className="sls-summary-label">Purchase Cost</span>
+                        <h5 className="sls-summary-value">
+                          {formatCurrency(selectedProductDetails.purchaseRate * Number(quantitySold))}
+                        </h5>
+                      </div>
+                      <div>
+                        <span className="sls-summary-label">Expected Profit</span>
+                        <h5 className="sls-summary-value">
+                          {formatCurrency(calculateExpectedProfit())}
+                        </h5>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                className="sls-submit-btn"
+                disabled={loading || !selectedProduct || !quantitySold}
+              >
+                {loading ? (
+                  <>
+                    <span className="sls-spinner"></span>
+                    Processing Sale...
+                  </>
+                ) : (
+                  <>
+                    <i className="bi bi-check2-circle"></i>
+                    Complete Sale
+                  </>
+                )}
+              </button>
+            </form>
           </div>
         </div>
 
         {/* Right Column - Recent Transactions */}
-        <div className="col-lg-5">
-          <div className="card border-0 shadow-sm h-100">
-            <div className="card-header bg-white border-0 pt-3 d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">
-                <i className="bi bi-clock-history me-2 text-primary"></i>
-                Recent Transactions
-              </h5>
-              <span className="badge bg-primary">{recentSales.length} sales</span>
+        <div className="sls-card">
+          <div className="sls-transactions-header">
+            <div className="sls-transactions-title">
+              <i className="bi bi-clock-history sls-primary-icon"></i>
+              <h5>Recent Transactions</h5>
             </div>
-            <div className="card-body p-0">
-              <div className="list-group list-group-flush" style={{ maxHeight: "600px", overflowY: "auto" }}>
-                {recentSales.length > 0 ? (
-                  recentSales.map((sale, index) => (
-                    <div key={sale._id || index} className="list-group-item border-0 border-bottom">
-                      <div className="d-flex justify-content-between align-items-start mb-2">
-                        <div>
-                          <h6 className="fw-semibold mb-1">
-                            {sale.productId?.name || sale.productName || 'Unknown Product'}
-                          </h6>
-                          <small className="text-muted d-block">
-                            <i className="bi bi-clock me-1"></i>
-                            {formatDate(sale.createdAt)}
-                          </small>
-                          <small className="text-muted d-block">
-                            <i className="bi bi-upc-scan me-1"></i>
-                            Qty: {sale.quantitySold || 0}
-                          </small>
-                        </div>
-                        <div className="text-end">
-                          <span className={`badge ${sale.profit >= 0 ? 'bg-success' : 'bg-danger'} mb-1`}>
-                            {sale.profit >= 0 ? '+' : ''}{formatCurrency(sale.profit)}
-                          </span>
-                          <div className="small text-muted">
-                            Margin: {calculateMargin(sale.profit, sale.totalSaleValue)}%
-                          </div>
-                        </div>
-                      </div>
-                      <div className="d-flex justify-content-between align-items-center small bg-light p-2 rounded">
-                        <div>
-                          <span className="text-muted">Amount:</span>
-                          <strong className="ms-1 text-primary">{formatCurrency(sale.totalSaleValue)}</strong>
-                        </div>
-                        <div>
-                          <span className="text-muted">Purchase:</span>
-                          <strong className="ms-1 text-danger">{formatCurrency(sale.totalPurchaseValue)}</strong>
-                        </div>
+            <span className="sls-badge">{recentSales.length} sales</span>
+          </div>
+          <div className="sls-transactions-list">
+            {recentSales.length > 0 ? (
+              recentSales.map((sale, index) => (
+                <div key={sale._id || index} className="sls-transaction-item">
+                  <div className="sls-transaction-header">
+                    <div>
+                      <h6 className="sls-product-name">
+                        {sale.productId?.name || sale.productName || 'Unknown Product'}
+                      </h6>
+                      <div className="sls-transaction-meta">
+                        <span className="sls-meta-item">
+                          <i className="bi bi-clock"></i>
+                          {formatDate(sale.createdAt)}
+                        </span>
+                        <span className="sls-meta-item">
+                          <i className="bi bi-upc-scan"></i>
+                          Qty: {sale.quantitySold || 0}
+                        </span>
                       </div>
                     </div>
-                  ))
-                ) : (
-                  <div className="text-center py-5">
-                    <i className="bi bi-inbox fs-1 text-muted"></i>
-                    <p className="text-muted mt-3 fw-semibold">No Sales Yet</p>
-                    <p className="text-muted small mb-3">Complete your first sale to see it here</p>
-                    <button 
-                      className="btn btn-outline-primary btn-sm"
-                      onClick={fetchRecentSales}
-                    >
-                      <i className="bi bi-arrow-repeat me-2"></i>
-                      Refresh
-                    </button>
+                    <div className="text-end">
+                      <span className={`sls-profit-badge ${sale.profit >= 0 ? 'success' : 'danger'}`}>
+                        {sale.profit >= 0 ? '+' : ''}{formatCurrency(sale.profit)}
+                      </span>
+                      <div className={`sls-margin-text ${sale.profit >= 0 ? 'success' : 'danger'}`}>
+                        Margin: {calculateMargin(sale.profit, sale.totalSaleValue)}%
+                      </div>
+                    </div>
                   </div>
-                )}
+                  <div className="sls-transaction-footer">
+                    <div className="sls-footer-item">
+                      <span className="sls-footer-label">Amount:</span>
+                      <span className="sls-footer-value primary">{formatCurrency(sale.totalSaleValue)}</span>
+                    </div>
+                    <div className="sls-footer-item">
+                      <span className="sls-footer-label">Purchase:</span>
+                      <span className="sls-footer-value danger">{formatCurrency(sale.totalPurchaseValue)}</span>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="sls-empty-state">
+                <i className="bi bi-inbox sls-empty-icon"></i>
+                <p className="sls-empty-title">No Sales Yet</p>
+                <p className="sls-empty-text">Complete your first sale to see it here</p>
+                <button 
+                  className="sls-refresh-btn"
+                  onClick={fetchRecentSales}
+                >
+                  <i className="bi bi-arrow-repeat"></i>
+                  Refresh
+                </button>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

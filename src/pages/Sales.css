@@ -1,0 +1,589 @@
+/* Sales Page Styles - Unique Class Names */
+
+/* Main Container */
+.sls-container {
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  min-height: 100vh;
+}
+
+/* Grid Layout */
+.sls-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 992px) {
+  .sls-grid {
+    grid-template-columns: 7fr 5fr;
+  }
+}
+
+/* Cards */
+.sls-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.sls-card-header {
+  padding: 1.25rem 1.5rem;
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.sls-card-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sls-card-title i {
+  color: #10b981;
+}
+
+.sls-card-title i.sls-primary-icon {
+  color: #2563eb;
+}
+
+.sls-card-body {
+  padding: 1.5rem;
+}
+
+/* Alert Messages */
+.sls-alert {
+  padding: 1rem;
+  border-radius: 10px;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sls-alert-success {
+  background: #d1fae5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+}
+
+.sls-alert-danger {
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+
+.sls-alert-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sls-alert-icon {
+  font-size: 1.25rem;
+}
+
+.sls-alert-close {
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.sls-alert-close:hover {
+  opacity: 1;
+}
+
+/* Form Elements */
+.sls-form-group {
+  margin-bottom: 1.5rem;
+}
+
+.sls-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.875rem;
+}
+
+.sls-select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 1rem;
+  color: #1e293b;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sls-select:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.sls-select option {
+  padding: 0.5rem;
+}
+
+/* Warning Message */
+.sls-warning {
+  background: #fffbeb;
+  border: 1px solid #fef3c7;
+  color: #92400e;
+  padding: 1rem;
+  border-radius: 10px;
+  margin-top: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sls-warning i {
+  color: #f59e0b;
+}
+
+/* Product Details Card */
+.sls-details-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.sls-details-body {
+  padding: 1.25rem;
+}
+
+.sls-details-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 1rem;
+}
+
+.sls-details-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 576px) {
+  .sls-details-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.sls-detail-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.sls-detail-icon {
+  color: #2563eb;
+  font-size: 1rem;
+  min-width: 1.25rem;
+}
+
+.sls-detail-text {
+  color: #1e293b;
+  font-size: 0.875rem;
+}
+
+.sls-detail-text strong {
+  font-weight: 600;
+  margin-right: 0.25rem;
+}
+
+/* Input Groups */
+.sls-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .sls-row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.sls-input-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.sls-input-wrapper {
+  display: flex;
+  align-items: stretch;
+}
+
+.sls-input-prefix {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-right: none;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px 0 0 8px;
+  display: flex;
+  align-items: center;
+  color: #64748b;
+}
+
+.sls-input {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0 8px 8px 0;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.sls-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.sls-input-hint {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+/* Transaction Summary Card */
+.sls-summary-card {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: white;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.sls-summary-body {
+  padding: 1.25rem;
+}
+
+.sls-summary-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.sls-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  text-align: center;
+}
+
+.sls-summary-label {
+  display: block;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 0.25rem;
+}
+
+.sls-summary-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* Submit Button */
+.sls-submit-btn {
+  width: 100%;
+  padding: 0.875rem;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sls-submit-btn:hover:not(:disabled) {
+  background: #059669;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3);
+}
+
+.sls-submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sls-spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: sls-spin 1s linear infinite;
+}
+
+@keyframes sls-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Recent Transactions Section */
+.sls-transactions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.sls-transactions-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sls-transactions-title h5 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+}
+
+.sls-badge {
+  background: #2563eb;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.sls-transactions-list {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.sls-transaction-item {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  transition: background-color 0.2s;
+}
+
+.sls-transaction-item:hover {
+  background: #f8fafc;
+}
+
+.sls-transaction-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.sls-product-name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 0.25rem 0;
+}
+
+.sls-transaction-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.sls-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+.sls-meta-item i {
+  font-size: 0.75rem;
+}
+
+.sls-profit-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-block;
+  text-align: center;
+}
+
+.sls-profit-badge.success {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.sls-profit-badge.danger {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.sls-transaction-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f8fafc;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  margin-top: 0.5rem;
+}
+
+.sls-footer-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.sls-footer-label {
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+.sls-footer-value {
+  font-weight: 600;
+  font-size: 0.8125rem;
+}
+
+.sls-footer-value.primary {
+  color: #2563eb;
+}
+
+.sls-footer-value.danger {
+  color: #ef4444;
+}
+
+/* Empty State */
+sls-empty-state {
+  text-align: center;
+  padding: 4rem 1.5rem;
+}
+
+.sls-empty-icon {
+  font-size: 3rem;
+  color: #cbd5e1;
+  margin-bottom: 1rem;
+}
+
+.sls-empty-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 0.5rem;
+}
+
+.sls-empty-text {
+  color: #64748b;
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem;
+}
+
+.sls-refresh-btn {
+  background: transparent;
+  border: 1px solid #2563eb;
+  color: #2563eb;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sls-refresh-btn:hover {
+  background: #2563eb;
+  color: white;
+}
+
+/* Margin Text */
+.sls-margin-text {
+  font-size: 0.75rem;
+}
+
+.sls-margin-text.success {
+  color: #10b981;
+}
+
+.sls-margin-text.danger {
+  color: #ef4444;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sls-container {
+    padding: 1rem;
+  }
+  
+  .sls-card-header,
+  .sls-transactions-header {
+    padding: 1rem;
+  }
+  
+  .sls-card-body {
+    padding: 1rem;
+  }
+  
+  .sls-summary-grid {
+    gap: 0.5rem;
+  }
+  
+  .sls-summary-value {
+    font-size: 1rem;
+  }
+  
+  .sls-transaction-footer {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 576px) {
+  .sls-details-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .sls-summary-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .sls-transaction-header {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .sls-profit-badge {
+    align-self: flex-start;
+  }
+}
