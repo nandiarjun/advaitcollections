@@ -68,77 +68,108 @@ function AdminDashboard() {
     }
   };
 
+  // Safe number formatter
+  const safeNumber = (value) => {
+    if (value === undefined || value === null) return 0;
+    const num = parseFloat(value);
+    return isNaN(num) ? 0 : num;
+  };
+
+  // Safe string formatter
+  const safeString = (value) => {
+    if (value === undefined || value === null) return 'N/A';
+    return String(value);
+  };
+
+  // Safe percentage formatter
+  const formatPercentage = (value) => {
+    const num = safeNumber(value);
+    return `${num.toFixed(2)}%`;
+  };
+
   // Export to Excel
   const exportToExcel = () => {
-    if (!filteredReport.length) {
-      alert("No data to export");
-      return;
+    try {
+      if (!filteredReport.length) {
+        alert("No data to export");
+        return;
+      }
+
+      const exportData = filteredReport.map(item => ({
+        "Product Name": safeString(item.productName),
+        "Barcode": safeString(item.barcode),
+        "Current Stock": safeNumber(item.currentStock),
+        "Total Sold": safeNumber(item.totalSoldQty),
+        "Total Purchased": safeNumber(item.totalPurchasedQty),
+        "Purchase Rate": `₹${safeNumber(item.purchaseRate).toFixed(2)}`,
+        "Selling Rate": `₹${safeNumber(item.sellingRate).toFixed(2)}`,
+        "Total Purchase Value": `₹${safeNumber(item.totalPurchaseValue).toFixed(2)}`,
+        "Total Sales Value": `₹${safeNumber(item.totalSalesValue).toFixed(2)}`,
+        "Profit/Loss": `₹${safeNumber(item.profit).toFixed(2)}`,
+        "Profit Margin": formatPercentage(item.profitMargin)
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+
+      const colWidths = [
+        { wch: 30 }, { wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 15 },
+        { wch: 15 }, { wch: 15 }, { wch: 20 }, { wch: 20 }, { wch: 15 }, { wch: 15 }
+      ];
+      worksheet['!cols'] = colWidths;
+
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Product Report");
+
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array"
+      });
+
+      const date = new Date().toISOString().split('T')[0];
+      const file = new Blob([excelBuffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      });
+
+      saveAs(file, `Advait_Collections_Report_${date}.xlsx`);
+      console.log("Excel export successful");
+    } catch (error) {
+      console.error("Excel export error:", error);
+      alert("Failed to export Excel file. Please try again.");
     }
-
-    const exportData = filteredReport.map(item => ({
-      "Product Name": item.productName || 'N/A',
-      "Barcode": item.barcode || 'N/A',
-      "Current Stock": item.currentStock || 0,
-      "Total Sold": item.totalSoldQty || 0,
-      "Total Purchased": item.totalPurchasedQty || 0,
-      "Purchase Rate": `₹${(item.purchaseRate || 0).toFixed(2)}`,
-      "Selling Rate": `₹${(item.sellingRate || 0).toFixed(2)}`,
-      "Total Purchase Value": `₹${(item.totalPurchaseValue || 0).toFixed(2)}`,
-      "Total Sales Value": `₹${(item.totalSalesValue || 0).toFixed(2)}`,
-      "Profit/Loss": `₹${(item.profit || 0).toFixed(2)}`,
-      "Profit Margin": `${(item.profitMargin || 0).toFixed(2)}%`
-    }));
-
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const workbook = XLSX.utils.book_new();
-
-    const colWidths = [
-      { wch: 30 }, { wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 15 },
-      { wch: 15 }, { wch: 15 }, { wch: 20 }, { wch: 20 }, { wch: 15 }, { wch: 15 }
-    ];
-    worksheet['!cols'] = colWidths;
-
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Product Report");
-
-    const excelBuffer = XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "array"
-    });
-
-    const date = new Date().toISOString().split('T')[0];
-    const file = new Blob([excelBuffer], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    });
-
-    saveAs(file, `Advait_Collections_Report_${date}.xlsx`);
   };
 
   // Export as CSV
   const exportAsCSV = () => {
-    if (!filteredReport.length) {
-      alert("No data to export");
-      return;
+    try {
+      if (!filteredReport.length) {
+        alert("No data to export");
+        return;
+      }
+
+      const exportData = filteredReport.map(item => ({
+        Product: safeString(item.productName),
+        Barcode: safeString(item.barcode),
+        Stock: safeNumber(item.currentStock),
+        Sold: safeNumber(item.totalSoldQty),
+        Purchased: safeNumber(item.totalPurchasedQty),
+        Purchase_Rate: safeNumber(item.purchaseRate).toFixed(2),
+        Selling_Rate: safeNumber(item.sellingRate).toFixed(2),
+        Purchase_Value: safeNumber(item.totalPurchaseValue).toFixed(2),
+        Sales_Value: safeNumber(item.totalSalesValue).toFixed(2),
+        Profit: safeNumber(item.profit).toFixed(2),
+        Margin: formatPercentage(item.profitMargin)
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const csv = XLSX.utils.sheet_to_csv(worksheet);
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const date = new Date().toISOString().split('T')[0];
+      saveAs(blob, `Advait_Collections_Report_${date}.csv`);
+      console.log("CSV export successful");
+    } catch (error) {
+      console.error("CSV export error:", error);
+      alert("Failed to export CSV file. Please try again.");
     }
-
-    const exportData = filteredReport.map(item => ({
-      Product: item.productName || 'N/A',
-      Barcode: item.barcode || 'N/A',
-      Stock: item.currentStock || 0,
-      Sold: item.totalSoldQty || 0,
-      Purchased: item.totalPurchasedQty || 0,
-      Purchase_Rate: (item.purchaseRate || 0).toFixed(2),
-      Selling_Rate: (item.sellingRate || 0).toFixed(2),
-      Purchase_Value: (item.totalPurchaseValue || 0).toFixed(2),
-      Sales_Value: (item.totalSalesValue || 0).toFixed(2),
-      Profit: (item.profit || 0).toFixed(2),
-      Margin: `${(item.profitMargin || 0).toFixed(2)}%`
-    }));
-
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const csv = XLSX.utils.sheet_to_csv(worksheet);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const date = new Date().toISOString().split('T')[0];
-    saveAs(blob, `Advait_Collections_Report_${date}.csv`);
   };
 
   // Filter and sort report
@@ -149,17 +180,17 @@ function AdminDashboard() {
 
     // Apply profit/loss filter
     if (dateRange === "profit") {
-      filtered = filtered.filter(item => (item.profit || 0) > 0);
+      filtered = filtered.filter(item => safeNumber(item.profit) > 0);
     } else if (dateRange === "loss") {
-      filtered = filtered.filter(item => (item.profit || 0) < 0);
+      filtered = filtered.filter(item => safeNumber(item.profit) < 0);
     }
 
     // Apply search filter
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(item =>
-        (item.productName || '').toLowerCase().includes(term) ||
-        (item.barcode || '').toLowerCase().includes(term)
+        safeString(item.productName).toLowerCase().includes(term) ||
+        safeString(item.barcode).toLowerCase().includes(term)
       );
     }
 
@@ -168,12 +199,12 @@ function AdminDashboard() {
       let aVal = a[sortConfig.key];
       let bVal = b[sortConfig.key];
       
-      aVal = aVal !== undefined ? aVal : '';
-      bVal = bVal !== undefined ? bVal : '';
-      
-      if (typeof aVal === 'string') {
-        aVal = aVal.toLowerCase();
-        bVal = bVal.toLowerCase();
+      if (typeof aVal === 'number' || typeof bVal === 'number') {
+        aVal = safeNumber(aVal);
+        bVal = safeNumber(bVal);
+      } else {
+        aVal = safeString(aVal).toLowerCase();
+        bVal = safeString(bVal).toLowerCase();
       }
       
       if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
@@ -188,11 +219,11 @@ function AdminDashboard() {
 
   // Calculate totals
   const totals = filteredReport.reduce((acc, item) => ({
-    totalSales: acc.totalSales + (item.totalSalesValue || 0),
-    totalPurchases: acc.totalPurchases + (item.totalPurchaseValue || 0),
-    totalProfit: acc.totalProfit + (item.profit || 0),
-    totalStock: acc.totalStock + (item.currentStock || 0),
-    totalSold: acc.totalSold + (item.totalSoldQty || 0)
+    totalSales: acc.totalSales + safeNumber(item.totalSalesValue),
+    totalPurchases: acc.totalPurchases + safeNumber(item.totalPurchaseValue),
+    totalProfit: acc.totalProfit + safeNumber(item.profit),
+    totalStock: acc.totalStock + safeNumber(item.currentStock),
+    totalSold: acc.totalSold + safeNumber(item.totalSoldQty)
   }), {
     totalSales: 0,
     totalPurchases: 0,
@@ -207,15 +238,7 @@ function AdminDashboard() {
       currency: 'INR',
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
-    }).format(amount || 0);
-  };
-
-  // Safe number formatter for profit margin
-  const formatPercentage = (value) => {
-    if (value === undefined || value === null) return "0.00%";
-    const num = parseFloat(value);
-    if (isNaN(num)) return "0.00%";
-    return `${num.toFixed(2)}%`;
+    }).format(safeNumber(amount));
   };
 
   const handleSort = (key) => {
@@ -489,39 +512,39 @@ function AdminDashboard() {
                       <span className="adm-dash-product-badge primary">
                         <i className="bi bi-box"></i>
                       </span>
-                      <span>{item.productName || 'N/A'}</span>
-                      {(item.profitMargin || 0) > 20 && (
+                      <span>{safeString(item.productName)}</span>
+                      {safeNumber(item.profitMargin) > 20 && (
                         <span className="adm-dash-product-badge success">High Margin</span>
                       )}
                     </div>
                   </td>
                   <td>
-                    <code className="text-muted">{item.barcode || 'N/A'}</code>
+                    <code className="text-muted">{safeString(item.barcode)}</code>
                   </td>
                   <td className="text-center">
-                    <span className={`adm-dash-product-badge ${(item.currentStock || 0) > 0 ? 'info' : 'secondary'}`}>
-                      {item.currentStock || 0}
+                    <span className={`adm-dash-product-badge ${safeNumber(item.currentStock) > 0 ? 'info' : 'secondary'}`}>
+                      {safeNumber(item.currentStock)}
                     </span>
                   </td>
                   <td className="text-center">
                     <span className="adm-dash-product-badge warning">
-                      {item.totalSoldQty || 0}
+                      {safeNumber(item.totalSoldQty)}
                     </span>
                   </td>
                   <td className="text-center">
                     <span className="adm-dash-product-badge secondary">
-                      {item.totalPurchasedQty || 0}
+                      {safeNumber(item.totalPurchasedQty)}
                     </span>
                   </td>
                   <td className="text-end">{formatCurrency(item.purchaseRate)}</td>
                   <td className="text-end">{formatCurrency(item.sellingRate)}</td>
                   <td className="text-end text-danger">{formatCurrency(item.totalPurchaseValue)}</td>
                   <td className="text-end text-success">{formatCurrency(item.totalSalesValue)}</td>
-                  <td className={`text-end fw-bold ${(item.profit || 0) >= 0 ? 'text-success' : 'text-danger'}`}>
-                    {(item.profit || 0) >= 0 ? '+' : ''}{formatCurrency(item.profit)}
+                  <td className={`text-end fw-bold ${safeNumber(item.profit) >= 0 ? 'text-success' : 'text-danger'}`}>
+                    {safeNumber(item.profit) >= 0 ? '+' : ''}{formatCurrency(item.profit)}
                   </td>
                   <td className="text-center">
-                    <span className={`adm-dash-product-badge ${(item.profitMargin || 0) >= 0 ? 'success' : 'danger'}`}>
+                    <span className={`adm-dash-product-badge ${safeNumber(item.profitMargin) >= 0 ? 'success' : 'danger'}`}>
                       {formatPercentage(item.profitMargin)}
                     </span>
                   </td>
