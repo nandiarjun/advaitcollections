@@ -12,6 +12,7 @@ function Sales() {
   const [recentSales, setRecentSales] = useState([]);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [customPriceEnabled, setCustomPriceEnabled] = useState(false);
 
   const token = localStorage.getItem("adminToken");
 
@@ -55,6 +56,7 @@ function Sales() {
     const product = products.find(p => p._id === productId);
     setSelectedProductDetails(product);
     setCustomSellingPrice(product?.sellingRate || "");
+    setCustomPriceEnabled(false);
     setError(null);
   };
 
@@ -99,18 +101,26 @@ function Sales() {
         quantitySold: Number(quantitySold),
       };
 
-      if (customSellingPrice && Number(customSellingPrice) !== product.sellingRate) {
+      // Only send custom price if enabled and different from default
+      if (customPriceEnabled && customSellingPrice && Number(customSellingPrice) !== product.sellingRate) {
         saleData.customSellingPrice = Number(customSellingPrice);
       }
 
+      console.log("Sending sale data:", saleData);
       const res = await salesAPI.sellProduct(saleData);
 
       setSuccess(`✅ Sale Completed Successfully! Remaining Stock: ${res.remainingStock || 0}`);
+
+      // Show custom price info in success message if used
+      if (res.sale?.wasCustomPrice) {
+        setSuccess(prev => prev + ` (Custom price: ${formatCurrency(res.sale.customSellingPrice)})`);
+      }
 
       setQuantitySold("");
       setCustomSellingPrice("");
       setSelectedProduct("");
       setSelectedProductDetails(null);
+      setCustomPriceEnabled(false);
       
       await Promise.all([fetchProducts(), fetchRecentSales()]);
 
@@ -151,7 +161,7 @@ function Sales() {
 
   const calculateExpectedProfit = () => {
     if (!selectedProductDetails || !quantitySold) return 0;
-    const sellingPrice = Number(customSellingPrice || selectedProductDetails.sellingRate);
+    const sellingPrice = Number(customPriceEnabled && customSellingPrice ? customSellingPrice : selectedProductDetails.sellingRate);
     const purchasePrice = selectedProductDetails.purchaseRate;
     return (sellingPrice - purchasePrice) * Number(quantitySold);
   };
@@ -162,6 +172,12 @@ function Sales() {
   };
 
   const inStockProducts = products.filter(p => p.quantity > 0);
+
+  // Check if custom price is different from default
+  const isCustomPriceDifferent = () => {
+    if (!selectedProductDetails || !customSellingPrice) return false;
+    return Number(customSellingPrice) !== selectedProductDetails.sellingRate;
+  };
 
   return (
     <div className="sls-container">
@@ -305,23 +321,43 @@ function Sales() {
 
                 <div className="sls-input-group">
                   <label className="sls-label">
-                    Selling Price <span className="sls-input-hint">(Optional)</span>
+                    Selling Price 
+                    <span className="sls-input-hint">
+                      <input
+                        type="checkbox"
+                        className="sls-custom-price-checkbox"
+                        checked={customPriceEnabled}
+                        onChange={(e) => {
+                          setCustomPriceEnabled(e.target.checked);
+                          if (!e.target.checked) {
+                            setCustomSellingPrice(selectedProductDetails?.sellingRate || "");
+                          }
+                        }}
+                      /> Use custom price
+                    </span>
                   </label>
                   <div className="sls-input-wrapper">
                     <span className="sls-input-prefix">₹</span>
                     <input
                       type="number"
-                      className="sls-input"
-                      placeholder="Custom price"
+                      className={`sls-input ${customPriceEnabled ? 'sls-input-custom' : ''}`}
+                      placeholder={customPriceEnabled ? "Enter custom price" : "Using default price"}
                       min="0"
                       step="0.01"
                       value={customSellingPrice}
                       onChange={(e) => setCustomSellingPrice(e.target.value)}
+                      disabled={!customPriceEnabled}
+                      readOnly={!customPriceEnabled}
                     />
                   </div>
                   {selectedProductDetails && (
                     <small className="sls-input-hint">
                       Default: {formatCurrency(selectedProductDetails.sellingRate)}
+                      {customPriceEnabled && isCustomPriceDifferent() && (
+                        <span className="sls-custom-price-indicator">
+                          ⚡ Custom price will be recorded
+                        </span>
+                      )}
                     </small>
                   )}
                 </div>
@@ -337,7 +373,7 @@ function Sales() {
                         <span className="sls-summary-label">Sale Amount</span>
                         <h5 className="sls-summary-value">
                           {formatCurrency(
-                            Number(customSellingPrice || selectedProductDetails.sellingRate) * Number(quantitySold)
+                            Number(customPriceEnabled && customSellingPrice ? customSellingPrice : selectedProductDetails.sellingRate) * Number(quantitySold)
                           )}
                         </h5>
                       </div>
@@ -354,6 +390,12 @@ function Sales() {
                         </h5>
                       </div>
                     </div>
+                    {customPriceEnabled && isCustomPriceDifferent() && (
+                      <div className="sls-custom-price-note">
+                        <i className="bi bi-info-circle"></i>
+                        Custom price will be recorded in sales report
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -397,6 +439,9 @@ function Sales() {
                     <div>
                       <h6 className="sls-product-name">
                         {sale.productId?.name || sale.productName || 'Unknown Product'}
+                        {sale.wasCustomPrice && (
+                          <span className="sls-custom-badge">Custom</span>
+                        )}
                       </h6>
                       <div className="sls-transaction-meta">
                         <span className="sls-meta-item">
@@ -424,8 +469,11 @@ function Sales() {
                       <span className="sls-footer-value primary">{formatCurrency(sale.totalSaleValue)}</span>
                     </div>
                     <div className="sls-footer-item">
-                      <span className="sls-footer-label">Purchase:</span>
-                      <span className="sls-footer-value danger">{formatCurrency(sale.totalPurchaseValue)}</span>
+                      <span className="sls-footer-label">Price/unit:</span>
+                      <span className="sls-footer-value">
+                        {formatCurrency(sale.sellingPriceAtTime)}
+                        {sale.wasCustomPrice && <span className="sls-custom-star">*</span>}
+                      </span>
                     </div>
                   </div>
                 </div>

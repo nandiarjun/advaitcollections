@@ -50,6 +50,7 @@ function AdminNavbar() {
           padding: 0.4rem 1rem;
           box-shadow: 0 2px 8px rgba(0,0,0,0.03);
           min-height: 55px;
+          z-index: 1030;
         }
         
         /* Brand */
@@ -238,6 +239,11 @@ function AdminNavbar() {
           justify-content: space-between;
           border-bottom: 1px solid #e5e7eb;
           font-weight: 500;
+          position: fixed;
+          top: 55px;
+          left: 0;
+          right: 0;
+          z-index: 1020;
         }
         
         .mobile-datetime span {
@@ -308,6 +314,7 @@ function AdminNavbar() {
             className="navbar-toggler d-lg-none"
             type="button"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label="Toggle navigation"
           >
             <i className={`bi bi-${isMobileMenuOpen ? 'x' : 'list'}`}></i>
           </button>
@@ -318,6 +325,7 @@ function AdminNavbar() {
               <Link 
                 to="/admin-dashboard"
                 className={`nav-link-admin ${isActive('/admin-dashboard') ? 'active' : ''}`}
+                title="Dashboard"
               >
                 <i className="bi bi-speedometer2"></i>
                 Dash
@@ -326,6 +334,7 @@ function AdminNavbar() {
               <Link 
                 to="/admin-dashboard/add-product"
                 className={`nav-link-admin ${isActive('/admin-dashboard/add-product') ? 'active' : ''}`}
+                title="Add Product"
               >
                 <i className="bi bi-plus-circle"></i>
                 Add
@@ -334,22 +343,27 @@ function AdminNavbar() {
               <Link 
                 to="/admin-dashboard/sales"
                 className={`nav-link-admin ${isActive('/admin-dashboard/sales') ? 'active' : ''}`}
+                title="New Sale"
               >
                 <i className="bi bi-cart-check"></i>
                 Sale
               </Link>
 
+              
+
               <Link 
-                to="/admin-dashboard/summary"
-                className={`nav-link-admin ${isActive('/admin-dashboard/summary') ? 'active' : ''}`}
+                to="/admin-dashboard/sales-report"
+                className={`nav-link-admin ${isActive('/admin-dashboard/sales-report') ? 'active' : ''}`}
+                title="Sales Report"
               >
-                <i className="bi bi-graph-up"></i>
-                Stats
+                <i className="bi bi-bar-chart"></i>
+                Report
               </Link>
 
               <Link 
                 to="/admin-dashboard/settings"
                 className={`nav-link-admin ${isActive('/admin-dashboard/settings') ? 'active' : ''}`}
+                title="Settings"
               >
                 <i className="bi bi-gear"></i>
                 Settings
@@ -368,6 +382,7 @@ function AdminNavbar() {
               <button
                 className="logout-btn"
                 onClick={handleLogout}
+                title="Logout"
               >
                 <i className="bi bi-box-arrow-right"></i>
                 Logout
@@ -406,13 +421,15 @@ function AdminNavbar() {
                   New Sale
                 </Link>
 
+                
+
                 <Link 
-                  to="/admin-dashboard/summary"
-                  className={`nav-link-admin ${isActive('/admin-dashboard/summary') ? 'active' : ''}`}
+                  to="/admin-dashboard/sales-report"
+                  className={`nav-link-admin ${isActive('/admin-dashboard/sales-report') ? 'active' : ''}`}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <i className="bi bi-graph-up"></i>
-                  Sales Summary
+                  <i className="bi bi-bar-chart"></i>
+                  Sales Report
                 </Link>
 
                 <Link 
@@ -436,7 +453,10 @@ function AdminNavbar() {
 
                 <button
                   className="logout-btn"
-                  onClick={handleLogout}
+                  onClick={() => {
+                    handleLogout();
+                    setIsMobileMenuOpen(false);
+                  }}
                 >
                   <i className="bi bi-box-arrow-right"></i>
                   Logout
