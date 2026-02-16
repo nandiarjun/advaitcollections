@@ -16,8 +16,18 @@ function AdminLogin() {
     setError("");
 
     try {
-      // Using the authAPI from your centralized api.js
+      // Using the authAPI from your centralized api.js with correct endpoint
       const response = await authAPI.adminLogin({ email, password });
+      
+      // Store token in localStorage if returned
+      if (response.token) {
+        localStorage.setItem('adminToken', response.token);
+      }
+      
+      // Store user data if needed
+      if (response.user) {
+        localStorage.setItem('adminUser', JSON.stringify(response.user));
+      }
       
       // Show success message
       alert("✅ Login Successful! Redirecting to dashboard...");
@@ -27,7 +37,19 @@ function AdminLogin() {
 
     } catch (error) {
       console.error("Login error:", error);
-      setError(error.response?.data?.message || "Invalid email or password");
+      
+      // Handle different error scenarios
+      if (error.response?.status === 404) {
+        setError("Login service unavailable. Please check backend connection.");
+      } else if (error.response?.status === 401) {
+        setError("Invalid email or password");
+      } else if (error.response?.status === 400) {
+        setError("Please provide both email and password");
+      } else if (error.code === 'ERR_NETWORK') {
+        setError("Network error. Please check if backend server is running.");
+      } else {
+        setError(error.response?.data?.message || "Login failed. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -73,6 +95,7 @@ function AdminLogin() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
+                      disabled={loading}
                     />
                   </div>
                 </div>
@@ -91,11 +114,13 @@ function AdminLogin() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
+                      disabled={loading}
                     />
                     <button
                       type="button"
                       className="btn btn-outline-secondary"
                       onClick={() => setShowPassword(!showPassword)}
+                      disabled={loading}
                     >
                       <i className={`bi bi-${showPassword ? 'eye-slash' : 'eye'}`}></i>
                     </button>

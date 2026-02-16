@@ -134,7 +134,7 @@ export const salesAPI = {
 export const authAPI = {
   adminLogin: async (credentials) => {
     // ✅ THIS IS CORRECT - just "/auth/admin-login", not "/api/auth/admin-login"
-    const res = await api.post("/auth/admin-login", credentials);
+    const res = await api.post("/auth/login", credentials);
 
     if (res.data.token) {
       localStorage.setItem("adminToken", res.data.token);
