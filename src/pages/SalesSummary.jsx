@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { salesAPI } from "../services/api";
+import "./SalesSummary.css";
 
 function SalesSummary() {
   const [summary, setSummary] = useState({
@@ -50,45 +51,60 @@ function SalesSummary() {
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    if (!dateString) return 'N/A';
+    try {
+      return new Date(dateString).toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (e) {
+      return 'Invalid Date';
+    }
   };
 
   const formatShortDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    });
+    if (!dateString) return 'N/A';
+    try {
+      return new Date(dateString).toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      });
+    } catch (e) {
+      return 'Invalid Date';
+    }
   };
 
   if (loading) {
     return (
-      <div className="container mt-5 text-center">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
+      <div className="slsm-loading">
+        <div className="slsm-loading-content">
+          <div className="slsm-spinner"></div>
+          <p className="slsm-text-muted">Loading sales data...</p>
         </div>
-        <p className="mt-2 text-muted">Loading sales data...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="container mt-5 text-center">
-        <div className="alert alert-danger" role="alert">
-          <i className="bi bi-exclamation-triangle-fill me-2"></i>
-          {error}
+      <div className="slsm-error">
+        <div className="slsm-error-content">
+          <div className="slsm-error-icon">
+            <i className="bi bi-exclamation-triangle-fill"></i>
+          </div>
+          <h4 className="slsm-error-title">Oops! Something went wrong</h4>
+          <p className="slsm-error-message">{error}</p>
+          <div className="slsm-error-actions">
+            <button className="slsm-refresh-btn" onClick={fetchSummary}>
+              <i className="bi bi-arrow-repeat me-2"></i>
+              Retry
+            </button>
+          </div>
         </div>
-        <button className="btn btn-primary mt-3" onClick={fetchSummary}>
-          <i className="bi bi-arrow-repeat me-2"></i>
-          Retry
-        </button>
       </div>
     );
   }
@@ -106,233 +122,206 @@ function SalesSummary() {
     : 0;
 
   return (
-    <div className="container-fluid py-4">
+    <div className="slsm-container">
       {/* Header */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h4 className="fw-bold mb-0">
-          <i className="bi bi-graph-up me-2 text-primary"></i>
-          Sales Analytics Dashboard
-        </h4>
-        <button className="btn btn-outline-primary btn-sm" onClick={fetchSummary}>
-          <i className="bi bi-arrow-repeat me-2"></i>
+      <div className="slsm-header">
+        <div className="slsm-title-section">
+          <i className="bi bi-graph-up slsm-title-icon"></i>
+          <h1 className="slsm-title">Sales Analytics Dashboard</h1>
+        </div>
+        <button className="slsm-refresh-btn" onClick={fetchSummary}>
+          <i className="bi bi-arrow-repeat"></i>
           Refresh
         </button>
       </div>
 
       {/* Summary Cards */}
-      <div className="row g-3 mb-4">
-        <div className="col-md-3">
-          <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
-              <div className="d-flex align-items-center">
-                <div className="flex-shrink-0">
-                  <div className="bg-primary bg-opacity-10 p-3 rounded">
-                    <i className="bi bi-cash-stack fs-4 text-primary"></i>
-                  </div>
-                </div>
-                <div className="flex-grow-1 ms-3">
-                  <h6 className="text-muted mb-1">Total Sales</h6>
-                  <h4 className="mb-0 fw-bold">{formatCurrency(summary.totalSale)}</h4>
-                </div>
+      <div className="slsm-stats-grid">
+        <div className="slsm-stat-card">
+          <div className="slsm-stat-content">
+            <div className="slsm-stat-icon-wrapper primary">
+              <i className="bi bi-cash-stack slsm-stat-icon primary"></i>
+            </div>
+            <div className="slsm-stat-info">
+              <div className="slsm-stat-label">Total Sales</div>
+              <div className="slsm-stat-value">{formatCurrency(summary.totalSale)}</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="slsm-stat-card">
+          <div className="slsm-stat-content">
+            <div className="slsm-stat-icon-wrapper warning">
+              <i className="bi bi-cart-check slsm-stat-icon warning"></i>
+            </div>
+            <div className="slsm-stat-info">
+              <div className="slsm-stat-label">Total Purchase</div>
+              <div className="slsm-stat-value">{formatCurrency(summary.totalPurchase)}</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="slsm-stat-card">
+          <div className="slsm-stat-content">
+            <div className="slsm-stat-icon-wrapper success">
+              <i className="bi bi-piggy-bank slsm-stat-icon success"></i>
+            </div>
+            <div className="slsm-stat-info">
+              <div className="slsm-stat-label">Total Profit</div>
+              <div className={`slsm-stat-value ${summary.totalProfit >= 0 ? 'success' : 'danger'}`}>
+                {formatCurrency(summary.totalProfit)}
               </div>
             </div>
           </div>
         </div>
 
-        <div className="col-md-3">
-          <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
-              <div className="d-flex align-items-center">
-                <div className="flex-shrink-0">
-                  <div className="bg-warning bg-opacity-10 p-3 rounded">
-                    <i className="bi bi-cart-check fs-4 text-warning"></i>
-                  </div>
-                </div>
-                <div className="flex-grow-1 ms-3">
-                  <h6 className="text-muted mb-1">Total Purchase</h6>
-                  <h4 className="mb-0 fw-bold">{formatCurrency(summary.totalPurchase)}</h4>
-                </div>
-              </div>
+        <div className="slsm-stat-card">
+          <div className="slsm-stat-content">
+            <div className="slsm-stat-icon-wrapper info">
+              <i className="bi bi-receipt slsm-stat-icon info"></i>
             </div>
-          </div>
-        </div>
-
-        <div className="col-md-3">
-          <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
-              <div className="d-flex align-items-center">
-                <div className="flex-shrink-0">
-                  <div className={`bg-opacity-10 p-3 rounded ${summary.totalProfit >= 0 ? 'bg-success' : 'bg-danger'}`}>
-                    <i className={`bi bi-piggy-bank fs-4 ${summary.totalProfit >= 0 ? 'text-success' : 'text-danger'}`}></i>
-                  </div>
-                </div>
-                <div className="flex-grow-1 ms-3">
-                  <h6 className="text-muted mb-1">Total Profit</h6>
-                  <h4 className={`mb-0 fw-bold ${summary.totalProfit >= 0 ? 'text-success' : 'text-danger'}`}>
-                    {formatCurrency(summary.totalProfit)}
-                  </h4>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-md-3">
-          <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
-              <div className="d-flex align-items-center">
-                <div className="flex-shrink-0">
-                  <div className="bg-info bg-opacity-10 p-3 rounded">
-                    <i className="bi bi-receipt fs-4 text-info"></i>
-                  </div>
-                </div>
-                <div className="flex-grow-1 ms-3">
-                  <h6 className="text-muted mb-1">Transactions</h6>
-                  <h4 className="mb-0 fw-bold">{summary.totalTransactions}</h4>
-                  <small className="text-muted">Margin: {profitMargin}%</small>
-                </div>
-              </div>
+            <div className="slsm-stat-info">
+              <div className="slsm-stat-label">Transactions</div>
+              <div className="slsm-stat-value">{summary.totalTransactions}</div>
+              <div className="slsm-stat-sub">Margin: {profitMargin}%</div>
             </div>
           </div>
         </div>
       </div>
 
       {/* View Toggle */}
-      <div className="mb-4">
-        <div className="btn-group">
+      <div className="slsm-view-toggle">
+        <div className="slsm-toggle-group">
           <button 
-            className={`btn ${viewMode === 'overview' ? 'btn-primary' : 'btn-outline-primary'}`}
+            className={`slsm-toggle-btn ${viewMode === 'overview' ? 'active' : ''}`}
             onClick={() => setViewMode('overview')}
           >
-            <i className="bi bi-pie-chart me-2"></i>
+            <i className="bi bi-pie-chart"></i>
             Overview
           </button>
           <button 
-            className={`btn ${viewMode === 'daily' ? 'btn-primary' : 'btn-outline-primary'}`}
+            className={`slsm-toggle-btn ${viewMode === 'daily' ? 'active' : ''}`}
             onClick={() => setViewMode('daily')}
           >
-            <i className="bi bi-calendar-day me-2"></i>
+            <i className="bi bi-calendar-day"></i>
             Daily Breakdown
           </button>
         </div>
       </div>
 
       {viewMode === 'overview' ? (
-        <div className="row g-4">
+        <div className="slsm-overview-grid">
           {/* Performance Metrics */}
-          <div className="col-md-6">
-            <div className="card border-0 shadow-sm">
-              <div className="card-header bg-white border-0 pt-3">
-                <h6 className="fw-bold mb-0">Performance Metrics</h6>
+          <div className="slsm-card">
+            <div className="slsm-card-header">
+              <h6 className="slsm-card-title">Performance Metrics</h6>
+            </div>
+            <div className="slsm-card-body">
+              <div className="slsm-progress-section">
+                <div className="slsm-progress-header">
+                  <span className="slsm-progress-label">Profit Margin</span>
+                  <span className={`slsm-progress-value ${profitMargin >= 0 ? 'success' : 'danger'}`}>
+                    {profitMargin}%
+                  </span>
+                </div>
+                <div className="slsm-progress-bar">
+                  <div 
+                    className={`slsm-progress-fill ${profitMargin >= 0 ? 'success' : 'danger'}`}
+                    style={{ width: `${Math.min(Math.abs(profitMargin), 100)}%` }}
+                  ></div>
+                </div>
               </div>
-              <div className="card-body">
-                <div className="mb-4">
-                  <div className="d-flex justify-content-between mb-2">
-                    <span className="text-muted">Profit Margin</span>
-                    <span className={`fw-bold ${profitMargin >= 0 ? 'text-success' : 'text-danger'}`}>
-                      {profitMargin}%
-                    </span>
-                  </div>
-                  <div className="progress" style={{ height: "8px" }}>
-                    <div 
-                      className={`progress-bar ${profitMargin >= 0 ? 'bg-success' : 'bg-danger'}`}
-                      style={{ width: `${Math.min(Math.abs(profitMargin), 100)}%` }}
-                    ></div>
-                  </div>
-                </div>
 
-                <div className="row g-3">
-                  <div className="col-6">
-                    <div className="bg-light rounded p-3">
-                      <small className="text-muted d-block mb-1">Average Sale Value</small>
-                      <h5 className="mb-0 fw-bold text-primary">{formatCurrency(averageSaleValue)}</h5>
-                    </div>
-                  </div>
-                  <div className="col-6">
-                    <div className="bg-light rounded p-3">
-                      <small className="text-muted d-block mb-1">Average Profit</small>
-                      <h5 className={`mb-0 fw-bold ${averageProfit >= 0 ? 'text-success' : 'text-danger'}`}>
-                        {formatCurrency(averageProfit)}
-                      </h5>
-                    </div>
-                  </div>
+              <div className="slsm-metrics-grid">
+                <div className="slsm-metric-card">
+                  <span className="slsm-metric-label">Average Sale Value</span>
+                  <h5 className="slsm-metric-value primary">{formatCurrency(averageSaleValue)}</h5>
                 </div>
+                <div className="slsm-metric-card">
+                  <span className="slsm-metric-label">Average Profit</span>
+                  <h5 className={`slsm-metric-value ${averageProfit >= 0 ? 'success' : 'danger'}`}>
+                    {formatCurrency(averageProfit)}
+                  </h5>
+                </div>
+              </div>
 
-                <div className="mt-3">
-                  <div className="d-flex justify-content-between align-items-center border-top pt-3">
-                    <span className="text-muted">Total Revenue</span>
-                    <span className="fw-bold">{formatCurrency(summary.totalSale)}</span>
-                  </div>
-                  <div className="d-flex justify-content-between align-items-center mt-2">
-                    <span className="text-muted">Total Cost</span>
-                    <span className="fw-bold text-danger">{formatCurrency(summary.totalPurchase)}</span>
-                  </div>
-                  <div className="d-flex justify-content-between align-items-center mt-2 border-top pt-2">
-                    <span className="text-muted">Net Profit</span>
-                    <span className={`fw-bold ${summary.totalProfit >= 0 ? 'text-success' : 'text-danger'}`}>
-                      {formatCurrency(summary.totalProfit)}
-                    </span>
-                  </div>
+              <div className="slsm-breakdown">
+                <div className="slsm-breakdown-item">
+                  <span className="slsm-breakdown-label">Total Revenue</span>
+                  <span className="slsm-breakdown-value">{formatCurrency(summary.totalSale)}</span>
+                </div>
+                <div className="slsm-breakdown-item">
+                  <span className="slsm-breakdown-label">Total Cost</span>
+                  <span className="slsm-breakdown-value slsm-text-danger">{formatCurrency(summary.totalPurchase)}</span>
+                </div>
+                <div className="slsm-breakdown-total">
+                  <span className="slsm-breakdown-label">Net Profit</span>
+                  <span className={`slsm-breakdown-value ${summary.totalProfit >= 0 ? 'slsm-text-success' : 'slsm-text-danger'}`}>
+                    {formatCurrency(summary.totalProfit)}
+                  </span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Recent Sales */}
-          <div className="col-md-6">
-            <div className="card border-0 shadow-sm">
-              <div className="card-header bg-white border-0 pt-3 d-flex justify-content-between align-items-center">
-                <h6 className="fw-bold mb-0">Recent Transactions</h6>
-                <span className="badge bg-primary">{summary.recentSales?.length || 0} sales</span>
+          <div className="slsm-card">
+            <div className="slsm-card-header">
+              <div className="slsm-card-header-flex">
+                <h6 className="slsm-card-title">Recent Transactions</h6>
+                <span className="slsm-card-badge">{summary.recentSales?.length || 0} sales</span>
               </div>
-              <div className="card-body p-0">
-                <div className="list-group list-group-flush" style={{ maxHeight: "350px", overflowY: "auto" }}>
-                  {summary.recentSales && summary.recentSales.length > 0 ? (
-                    summary.recentSales.map((sale, index) => (
-                      <div key={index} className="list-group-item border-0 border-bottom">
-                        <div className="d-flex justify-content-between align-items-start">
-                          <div>
-                            <h6 className="fw-semibold mb-1">{sale.productId?.name || 'Unknown Product'}</h6>
-                            <small className="text-muted d-block">
-                              <i className="bi bi-clock me-1"></i>
+            </div>
+            <div className="slsm-card-body-no-padding">
+              <div className="slsm-recent-list">
+                {summary.recentSales && summary.recentSales.length > 0 ? (
+                  summary.recentSales.map((sale, index) => (
+                    <div key={index} className="slsm-recent-item">
+                      <div className="slsm-recent-content">
+                        <div className="slsm-recent-info">
+                          <h6>{sale.productId?.name || 'Unknown Product'}</h6>
+                          <div className="slsm-recent-meta">
+                            <span className="slsm-recent-meta-item">
+                              <i className="bi bi-clock"></i>
                               {formatDate(sale.createdAt)}
-                            </small>
-                            <small className="text-muted d-block">
-                              <i className="bi bi-box me-1"></i>
+                            </span>
+                            <span className="slsm-recent-meta-item">
+                              <i className="bi bi-box"></i>
                               Quantity: {sale.quantitySold}
-                            </small>
+                            </span>
                           </div>
-                          <div className="text-end">
-                            <div className="fw-bold text-primary">{formatCurrency(sale.totalSaleValue)}</div>
-                            <div className={`small ${sale.profit >= 0 ? 'text-success' : 'text-danger'}`}>
-                              {sale.profit >= 0 ? '+' : ''}{formatCurrency(sale.profit)}
-                            </div>
+                        </div>
+                        <div className="slsm-recent-amount">
+                          <div className="slsm-recent-sale">{formatCurrency(sale.totalSaleValue)}</div>
+                          <div className={`slsm-recent-profit ${sale.profit >= 0 ? 'success' : 'danger'}`}>
+                            {sale.profit >= 0 ? '+' : ''}{formatCurrency(sale.profit)}
                           </div>
                         </div>
                       </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-5">
-                      <i className="bi bi-inbox fs-1 text-muted"></i>
-                      <p className="text-muted mt-2">No recent sales</p>
                     </div>
-                  )}
-                </div>
+                  ))
+                ) : (
+                  <div className="slsm-empty-state">
+                    <i className="bi bi-inbox slsm-empty-icon"></i>
+                    <p className="slsm-empty-title">No recent sales</p>
+                    <p className="slsm-empty-text">Complete your first sale to see it here</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
       ) : (
         /* Daily Breakdown */
-        <div className="card border-0 shadow-sm">
-          <div className="card-header bg-white border-0 pt-3">
-            <h6 className="fw-bold mb-0">Daily Sales Breakdown</h6>
+        <div className="slsm-card">
+          <div className="slsm-card-header">
+            <h6 className="slsm-card-title">Daily Sales Breakdown</h6>
           </div>
-          <div className="card-body">
+          <div className="slsm-card-body">
             {summary.salesByDate && Object.keys(summary.salesByDate).length > 0 ? (
-              <div className="table-responsive">
-                <table className="table table-hover align-middle">
-                  <thead className="table-light">
+              <div className="slsm-table-responsive">
+                <table className="slsm-table">
+                  <thead>
                     <tr>
                       <th>Date</th>
                       <th className="text-center">Transactions</th>
@@ -351,25 +340,23 @@ function SalesSummary() {
                         return (
                           <tr key={date}>
                             <td>
-                              <span className="fw-medium">{formatShortDate(date)}</span>
+                              <span className="slsm-text-muted">{formatShortDate(date)}</span>
                             </td>
                             <td className="text-center">
-                              <span className="badge bg-info bg-opacity-10 text-info">
-                                {data.count}
-                              </span>
+                              <span className="slsm-badge info">{data.count}</span>
                             </td>
-                            <td className="text-end fw-medium">
+                            <td className="text-end slsm-text-primary">
                               {formatCurrency(data.totalSale)}
                             </td>
-                            <td className={`text-end fw-medium ${data.totalProfit >= 0 ? 'text-success' : 'text-danger'}`}>
+                            <td className={`text-end ${data.totalProfit >= 0 ? 'slsm-text-success' : 'slsm-text-danger'}`}>
                               {data.totalProfit >= 0 ? '+' : ''}{formatCurrency(data.totalProfit)}
                             </td>
                             <td className="text-center">
-                              <span className={`badge ${margin >= 0 ? 'bg-success' : 'bg-danger'}`}>
+                              <span className={`slsm-badge ${margin >= 0 ? 'success' : 'danger'}`}>
                                 {margin}%
                               </span>
                             </td>
-                            <td className="text-center text-muted">
+                            <td className="text-center slsm-text-muted">
                               {formatCurrency(avgSale)}
                             </td>
                           </tr>
@@ -379,9 +366,10 @@ function SalesSummary() {
                 </table>
               </div>
             ) : (
-              <div className="text-center py-5">
-                <i className="bi bi-calendar-x fs-1 text-muted"></i>
-                <p className="text-muted mt-2">No daily data available</p>
+              <div className="slsm-empty-state">
+                <i className="bi bi-calendar-x slsm-empty-icon"></i>
+                <p className="slsm-empty-title">No daily data available</p>
+                <p className="slsm-empty-text">Complete some sales to see daily breakdown</p>
               </div>
             )}
           </div>
